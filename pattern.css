@@ -1,0 +1,101 @@
+/*
+ *	Slider based on:
+ *		https://www.w3schools.com/howto/howto_js_rangeslider.asp
+ */
+
+body {
+	font-family: "Lucida Console", Courier, monospace;
+	margin: 0px;
+}
+
+#app {
+	margin: 10px;
+	display: grid;
+	grid-column-gap: 0px;
+	grid-template-columns: [column1-start] 520px [column1-end column2-start] calc(100% - 520px) [column2-end];
+}
+
+#info-panel {
+	grid-column: 1;
+	border: 1px solid black;
+}
+
+#formulas, #details, #parameters {
+	margin: 5px 0px 20px 5px;
+}
+
+.formula, .slider-name {
+	margin-left: 20px;
+}
+
+.label:not(#r-label) {
+	margin-right: 20px;
+}
+
+.label#j-label, .label#k-label {
+	margin-right: 40px;
+}
+
+.slider-container:not(#r-container) {
+	margin-bottom: 10px;
+}
+
+.slider {
+  -webkit-appearance: none;
+  width: 200px;
+  height: 15px;
+  border-radius: 5px;  
+  background: #d3d3d3;
+  outline: none;
+  opacity: 0.7;
+  -webkit-transition: .2s;
+  transition: opacity .2s;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%; 
+  background: #4CAF50;
+}
+
+.slider::-moz-range-thumb {
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  background: #4CAF50;
+}
+
+.slider:hover {
+	background: #b3b3b3;
+}
+
+#buttons {
+	text-align: center;
+}
+
+#randomize {
+  color: white;
+  border: none;
+  padding: 20px 40px;
+  text-align: center;
+  font-size: 18px;
+  background: #4CAF50;
+}
+
+#randomize:hover {
+	background: #1C7520;
+}
+
+#randomize:focus {
+  outline: none;
+}
+
+#plot-panel {
+	grid-column: 2;
+	border: 1px solid black;
+	border-left: 0px;
+	text-align: center;
+}
