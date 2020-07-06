@@ -6,17 +6,21 @@ var Param = {
 	J: 4,
 	K: 5,
 	Precision: 6,
-	Thickness: 7
+	Thickness: 7,
+	OTThickness: 8
 }
 
 var plot = document.getElementById("plot");
 var plotCtx = plot.getContext("2d");
 var settingsPanel = document.getElementById("settings-panel");
 var plotPanel = document.getElementById("plot-panel");
+
 var curveColor = document.getElementById("curve-color");
-var bckgColor = document.getElementById("background-color");
+var outlineColorLabel = document.getElementById("ot-color-label");
+var outlineColor = document.getElementById("ot-color");
 var bckgTransparency = document.getElementById("background-transparency");
 var bckgColorLabel = document.getElementById("background-color-label");
+var bckgColor = document.getElementById("background-color");
 
 var sliders = [
 				document.getElementById("a-slider"),
@@ -27,6 +31,7 @@ var sliders = [
 				document.getElementById("k-slider"),
 				document.getElementById("precision-slider"),
 				document.getElementById("thickness-slider"),
+				document.getElementById("ot-thickness-slider")
 			];
 
 var labels = [
@@ -37,7 +42,8 @@ var labels = [
 				document.getElementById("j-range-label"),
 				document.getElementById("k-range-label"),
 				document.getElementById("precision-range-label"),
-				document.getElementById("thickness-range-label")
+				document.getElementById("thickness-range-label"),
+				document.getElementById("ot-thickness-range-label")
 			];
 
 //Setup listeners
@@ -53,7 +59,7 @@ window.addEventListener("resize", function(){
 	updateLabels();
 });
 
-for(let i = Param.A; i <= Param.Thickness; i++) {
+for(let i = Param.A; i <= Param.OTThickness; i++) {
 	sliders[i].addEventListener("input", function(){
 		drawCurve();
 		updateLabels();
@@ -71,13 +77,25 @@ curveColor.addEventListener("input", function(){
 	drawCurve();
 })
 
-bckgColor.addEventListener("input", function(){
-	plotPanel.style.backgroundColor = bckgColor.value;
+sliders[Param.OTThickness].addEventListener("input", function(){
+	if(this.value == 0) {
+		outlineColorLabel.setAttribute("disabled", "disabled");
+		outlineColor.setAttribute("disabled", "disabled");
+	}
+	else {
+		outlineColorLabel.removeAttribute("disabled");
+		outlineColor.removeAttribute("disabled");
+	}
+
+	drawCurve();
+});
+
+outlineColor.addEventListener("input", function(){
 	drawCurve();
 })
 
 bckgTransparency.addEventListener("input", function(){
-	if(bckgTransparency.checked) {
+	if(this.checked) {
 		bckgColorLabel.setAttribute("disabled", "disabled");
 		bckgColor.setAttribute("disabled", "disabled");
 		plotPanel.style.backgroundColor = "transparent";
@@ -88,6 +106,11 @@ bckgTransparency.addEventListener("input", function(){
 		plotPanel.style.backgroundColor = bckgColor.value;
 	}
 
+	drawCurve();
+})
+
+bckgColor.addEventListener("input", function(){
+	plotPanel.style.backgroundColor = bckgColor.value;
 	drawCurve();
 })
 
@@ -115,6 +138,13 @@ function updateCanvasDimensions() {
 }
 
 function drawCurve() {
+	let curveThickness = Number(sliders[Param.Thickness].value);
+	let outlineThickness = Number(sliders[Param.OTThickness].value);
+	let fullThickness = curveThickness + outlineThickness;
+	let MaxThickness = Number(sliders[Param.Thickness].max) + Number(sliders[Param.OTThickness].max);
+	let adjustedThickness = fullThickness + (fullThickness / MaxThickness) * 100;
+	let demiThickness = .5 * adjustedThickness;
+
 	//Fetch the curve (each point having normalized coordinates)
 	let curve = getCurve(
 		sliders[Param.A].value,
@@ -130,8 +160,8 @@ function drawCurve() {
 	let newPoints = [[0, 0]];
 	for(let i = 0; i < curve.length; i++) {
 		newPoints.push([
-			curve[i][0] * plot.width, 
-			curve[i][1] * plot.height
+			demiThickness + curve[i][0] * (plot.width - adjustedThickness), 
+			demiThickness + curve[i][1] * (plot.height - adjustedThickness)
 		]);
 	}
 
@@ -143,14 +173,24 @@ function drawCurve() {
 		plotCtx.fillStyle = bckgColor.value;
 		plotCtx.fillRect(0, 0, plot.width, plot.height);
 	}
-	plotCtx.lineWidth = sliders[Param.Thickness].value;
-	plotCtx.strokeStyle = curveColor.value;
+
+	//Draw outline first
+	if(outlineThickness > 0) {
+		plotCurve(newPoints, fullThickness, outlineColor.value);
+	}
+
+	plotCurve(newPoints, curveThickness, curveColor.value);
+}
+
+function plotCurve(points, thickness, color) {
+	plotCtx.lineWidth = thickness;
+	plotCtx.strokeStyle = color;
 	plotCtx.beginPath();
 
 	//Draw the curve
-	plotCtx.moveTo(newPoints[1][0], plot.height - newPoints[1][1]);
-	for(let i = 2; i < curve.length + 1; i++) {
-		plotCtx.lineTo(newPoints[i][0], plot.height - newPoints[i][1]);
+	plotCtx.moveTo(points[1][0], plot.height - points[1][1]);
+	for(let i = 2; i < points.length; i++) {
+		plotCtx.lineTo(points[i][0], plot.height - points[i][1]);
 	}
 	plotCtx.stroke();
 }
@@ -208,7 +248,7 @@ function updateLabels() {
 	padLabels(Param.A, Param.K);
 
 	//Drawing options
-	padLabels(Param.Precision, Param.Thickness);
+	padLabels(Param.Precision, Param.OTThickness);
 }
 
 function padLabels(start, end) {
