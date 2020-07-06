@@ -5,13 +5,18 @@ var Param = {
 	D: 3,
 	J: 4,
 	K: 5,
-	R: 6
+	Precision: 6,
+	Thickness: 7
 }
 
 var plot = document.getElementById("plot");
 var plotCtx = plot.getContext("2d");
-var infoPanel = document.getElementById("info-panel");
+var settingsPanel = document.getElementById("settings-panel");
 var plotPanel = document.getElementById("plot-panel");
+var curveColor = document.getElementById("curve-color");
+var bckgColor = document.getElementById("background-color");
+var bckgTransparency = document.getElementById("background-transparency");
+var bckgColorLabel = document.getElementById("background-color-label");
 
 var sliders = [
 				document.getElementById("a-slider"),
@@ -20,17 +25,19 @@ var sliders = [
 				document.getElementById("d-slider"),
 				document.getElementById("j-slider"),
 				document.getElementById("k-slider"),
-				document.getElementById("r-slider")
+				document.getElementById("precision-slider"),
+				document.getElementById("thickness-slider"),
 			];
 
 var labels = [
-				document.getElementById("a-label"),
-				document.getElementById("b-label"),
-				document.getElementById("c-label"),
-				document.getElementById("d-label"),
-				document.getElementById("j-label"),
-				document.getElementById("k-label"),
-				document.getElementById("r-label")
+				document.getElementById("a-range-label"),
+				document.getElementById("b-range-label"),
+				document.getElementById("c-range-label"),
+				document.getElementById("d-range-label"),
+				document.getElementById("j-range-label"),
+				document.getElementById("k-range-label"),
+				document.getElementById("precision-range-label"),
+				document.getElementById("thickness-range-label")
 			];
 
 //Setup listeners
@@ -46,7 +53,7 @@ window.addEventListener("resize", function(){
 	updateLabels();
 });
 
-for(let i = Param.A; i <= Param.R; i++) {
+for(let i = Param.A; i <= Param.Thickness; i++) {
 	sliders[i].addEventListener("input", function(){
 		drawCurve();
 		updateLabels();
@@ -60,15 +67,50 @@ document.getElementById("randomize").addEventListener("click", function(){
 	updateLabels();
 });
 
+curveColor.addEventListener("input", function(){
+	drawCurve();
+})
+
+bckgColor.addEventListener("input", function(){
+	plotPanel.style.backgroundColor = bckgColor.value;
+	drawCurve();
+})
+
+bckgTransparency.addEventListener("input", function(){
+	if(bckgTransparency.checked) {
+		bckgColorLabel.setAttribute("disabled", "disabled");
+		bckgColor.setAttribute("disabled", "disabled");
+		plotPanel.style.backgroundColor = "transparent";
+	}
+	else {
+		bckgColorLabel.removeAttribute("disabled");
+		bckgColor.removeAttribute("disabled");
+		plotPanel.style.backgroundColor = bckgColor.value;
+	}
+
+	drawCurve();
+})
+
+document.getElementById("save").addEventListener("click", function(){
+    let img = plot.toDataURL("image/png");
+    this.href = img;
+    this.download="SplineGen(a" + sliders[Param.A].value + 
+    				"-b" + sliders[Param.B].value +
+    				"-c" + sliders[Param.C].value +
+    				"-d" + sliders[Param.D].value +
+    				"-j" + sliders[Param.J].value +
+    				"-k" + sliders[Param.K].value + ").png"
+});
+
 //Ensure the canvas takes as much space as possible without having to scroll
 function updateCanvasDimensions() {
-	let target = Math.min(window.innerWidth - infoPanel.offsetWidth, window.innerHeight - 32);
+	let target = Math.min(window.innerWidth - settingsPanel.offsetWidth, window.innerHeight - 32);
 	plot.width = target;
 	plot.height = target;
 
-	if(target <= infoPanel.offsetHeight) {
-		plot.width = infoPanel.offsetHeight;
-		plot.height = infoPanel.offsetHeight;
+	if(target <= settingsPanel.offsetHeight) {
+		plot.width = settingsPanel.offsetHeight;
+		plot.height = settingsPanel.offsetHeight;
 	}
 }
 
@@ -81,7 +123,7 @@ function drawCurve() {
 		sliders[Param.D].value,
 		sliders[Param.J].value,
 		sliders[Param.K].value,
-		sliders[Param.R].value,
+		sliders[Param.Precision].value,
 		true);
 
 	//Remap the curve points to the canvas space
@@ -94,10 +136,15 @@ function drawCurve() {
 	}
 
 	//Setup the canvas for drawing
-	plotCtx.fillStyle = "#ffffff";
-	plotCtx.fillRect(0, 0, plot.width, plot.height);
-	plotCtx.lineWidth = 1;
-	plotCtx.strokeStyle = "#000000";
+	if(bckgTransparency.checked) {
+		plotCtx.clearRect(0, 0, plot.width, plot.height);
+	}
+	else {
+		plotCtx.fillStyle = bckgColor.value;
+		plotCtx.fillRect(0, 0, plot.width, plot.height);
+	}
+	plotCtx.lineWidth = sliders[Param.Thickness].value;
+	plotCtx.strokeStyle = curveColor.value;
 	plotCtx.beginPath();
 
 	//Draw the curve
@@ -150,17 +197,39 @@ function remap(value, currentMin, currentMax, targetMin, targetMax, rounded = tr
 }
 
 function randomizeValues() {
-	for(let i = Param.A; i < Param.R; i++) {
-		sliders[i].value = Number(sliders[i].min) + Math.floor(Math.random() * (sliders[i].max - sliders[i].min + 1));
+	for(let i = Param.A; i <= Param.K; i++) {
+		sliders[i].value = Number(sliders[i].min) + Math.floor(Math.random() * (Number(sliders[i].max - sliders[i].min) + 1));
 	} 
 }
 
+//Change the labels content to reflect the parameter values
 function updateLabels() {
-	//Change the labels content to reflect the parameter values
-	for(let i = Param.A; i <= Param.R; i++) {
-		let nbDigits = Math.log10(sliders[i].max) + 1;
+	//Parameters
+	padLabels(Param.A, Param.K);
+
+	//Drawing options
+	padLabels(Param.Precision, Param.Thickness);
+}
+
+function padLabels(start, end) {
+	let nbDigits = getHighestNbDigits(start, end);
+	for(let i = start; i <= end; i++) {
 		let labelContent = " (" + sliders[i].value.toString().padStart(nbDigits, '0') +
-						" / " + sliders[i].max + ")";
+						" / " + sliders[i].max.padStart(nbDigits, '0') + ")";
 		labels[i].innerHTML = labelContent;
 	};
+}
+
+function getHighestNbDigits(start, end) {
+	let highestNbDigits = 0;
+
+	for(let i = start; i <= end; i++) {
+		let nbDigits = Math.log10(sliders[i].max) + 1;
+
+		if(nbDigits > highestNbDigits) {
+			highestNbDigits = nbDigits;
+		}
+	}
+
+	return highestNbDigits;
 }

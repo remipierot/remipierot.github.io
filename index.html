@@ -13,60 +13,86 @@
 
 <body>
 	<div id="app">
-		<div id="info-panel">
-			<div id = "formulas">
-				<div class = "title">Formulas</div>
-				<div class = "formula">- x = cos(a * t * 2PI) - cos(b * t * 2PI)^j</div>
-				<div class = "formula">- y = sin(c * t * 2PI) - sin(d * t * 2PI)^k</div>
+		<div class="panel" id="settings-panel">
+			<div class="block" id="formulas-block">
+				<div class="title">Formulas</div>
+				<div class="formula">. x = cos(a * t * 2PI) - cos(b * t * 2PI)^j</div>
+				<div class="formula">. y = sin(c * t * 2PI) - sin(d * t * 2PI)^k</div>
 			</div>
 
-			<div id = "details">
-				<div class = "title">Details</div>
-				<div class = "formula">- a, b, c, d, j, k can be arbitrarily chosen</div>
-				<div class = "formula">- If b = 0, j will not have any effect</div>
-				<div class = "formula">- If d = 0, k will not have any effect</div>
-				<div class = "formula">- r is the number of points used to draw the curve</div>
-				<div class = "formula">- Randomize will not change r</div>
+			<div class="block" id="details-block">
+				<div class="title">Details</div>
+				<div class="detail">. a, b, c, d, j, k can be arbitrarily chosen</div>
+				<div class="detail">. If b = 0, j will not have any effect</div>
+				<div class="detail">. If d = 0, k will not have any effect</div>
 			</div>
 
-			<div id="parameters">
-				<div class = "title">Parameters</div>
-				<div class="slider-container" id="a-container">
-					<span class="slider-name">a</span><span class="label" id="a-label"></span>
+			<div class="block" id="parameters-block">
+				<div class="title">Parameters</div>
+				<div class="container" id="a-container">
+					<span class="name">a<span id="a-range-label"></span></span>
 					<input type="range" min="0" max="10" value="1" class="slider" id="a-slider">
 				</div>
-				<div class="slider-container" id="b-container">
-					<span class="slider-name">b</span><span class="label" id="b-label"></span>
+				<div class="container" id="b-container">
+					<span class="name">b<span id="b-range-label"></span></span>
 					<input type="range" min="0" max="10" value="7" class="slider" id="b-slider">
 				</div>
-				<div class="slider-container" id="c-container">
-					<span class="slider-name">c</span><span class="label" id="c-label"></span>
+				<div class="container" id="c-container">
+					<span class="name">c<span id="c-range-label"></span></span>
 					<input type="range" min="0" max="10" value="3" class="slider" id="c-slider">
 				</div>
-				<div class="slider-container" id="d-container">
-					<span class="slider-name">d</span><span class="label" id="d-label"></span>
+				<div class="container" id="d-container">
+					<span class="name">d<span id="d-range-label"></span></span>
 					<input type="range" min="0" max="10" value="0" class="slider" id="d-slider">
 				</div>
-				<div class="slider-container" id="j-container">
-					<span class="slider-name">j</span><span class="label" id="j-label"></span>
+				<div class="container" id="j-container">
+					<span class="name">j<span id="j-range-label"></span></span>
 					<input type="range" min="1" max="3" value="3" class="slider" id="j-slider">
 				</div>
-				<div class="slider-container" id="k-container">
-					<span class="slider-name">k</span><span class="label" id="k-label"></span>
+				<div class="container" id="k-container">
+					<span class="name">k<span id="k-range-label"></span></span>
 					<input type="range" min="1" max="3" value="2" class="slider" id="k-slider">
 				</div>
-				<div class="slider-container" id="r-container">
-					<span class="slider-name">r</span><span class="label" id="r-label"></span>
-					<input type="range" min="0" max="500" value="250" class="slider" id="r-slider">
+				<div class="container" id="randomize-container">
+					<button type="button" id="randomize">Randomize</button>
 				</div>
 			</div>
 
-			<div id="buttons">
-				<button type="button" id="randomize">Randomize</button>
+			<div class="block" id="options-block">
+				<div class="title">Drawing options</div>
+				<div class="sub-block" id="curve-block">
+					<div class="sub-title">Curve</div>
+					<div class="container" id="precision-container">
+						<span class="name">Precision<span id="precision-range-label"></span></span>
+						<input type="range" min="0" max="500" value="250" class="slider" id="precision-slider">
+					</div>
+					<div class="container" id="thickness-container">
+						<span class="name">Thickness<span id="thickness-range-label"></span></span>
+						<input type="range" min="1" max="10" value="1" class="slider" id="thickness-slider">
+					</div>
+					<div class="container" id="curve-color-container">
+						<span class="name" id="curve-color-label">Color</span>
+						<input type="color" id="curve-color" value="#000000">
+					</div>
+				</div>
+				<div class="sub-block" id="background-block">
+					<div class="sub-title">Background</div>
+					<div class="container" id="background-transparency-container">
+						<span class="name" id="background-transparency-label">Transparent</span>
+						<input type="checkbox" id="background-transparency"/>
+					</div>
+					<div class="container" id="background-color-container">
+						<span class="name" id="background-color-label">Color</span>
+						<input type="color" id="background-color" value="#ffffff">
+					</div>
+				</div>
+				<div class="container" id="save-container">
+					<a href="#" class="button" id="save" download="SplineGen.png">Save PNG</a>
+				</div>
 			</div>
 		</div>
 
-		<div id="plot-panel">
+		<div class="panel" id="plot-panel">
 			<canvas id="plot"></canvas>
 		</div>
 	</div>
