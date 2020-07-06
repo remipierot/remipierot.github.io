@@ -110,7 +110,6 @@ bckgTransparency.addEventListener("input", function(){
 })
 
 bckgColor.addEventListener("input", function(){
-	plotPanel.style.backgroundColor = bckgColor.value;
 	drawCurve();
 })
 
@@ -164,6 +163,8 @@ function drawCurve() {
 			demiThickness + curve[i][1] * (plot.height - adjustedThickness)
 		]);
 	}
+
+	plotPanel.style.backgroundColor = bckgColor.value;
 
 	//Setup the canvas for drawing
 	if(bckgTransparency.checked) {
