@@ -36,9 +36,8 @@ body {
 	vertical-align: middle;
 }
 
-#plot {
+#svg-plot {
 	margin-bottom: -3px;
-	display: none;
 }
 
 .block {

@@ -10,7 +10,7 @@ var Param = {
 	OTThickness: 8
 }
 
-var plot = document.getElementById("plot");
+var plot = document.createElement('canvas');
 var plotCtx = plot.getContext("2d");
 var settingsPanel = document.getElementById("settings-panel");
 var plotPanel = document.getElementById("plot-panel");
@@ -49,13 +49,13 @@ var labels = [
 
 //Setup listeners
 window.addEventListener("load", function(){
-	updateCanvasDimensions()
+	updatePlotDimensions()
 	drawCurve();
 	updateLabels();
 });
 
 window.addEventListener("resize", function(){
-	updateCanvasDimensions();
+	updatePlotDimensions();
 	drawCurve();
 	updateLabels();
 });
@@ -69,7 +69,7 @@ for(let i = Param.A; i <= Param.OTThickness; i++) {
 
 document.getElementById("randomize").addEventListener("click", function(){
 	randomizeValues()
-	updateCanvasDimensions()
+	updatePlotDimensions()
 	drawCurve();
 	updateLabels();
 });
@@ -115,6 +115,34 @@ bckgColor.addEventListener("input", function(){
 })
 
 document.getElementById("save-png").addEventListener("click", function(){
+    let svgNodes = svgPlot.childNodes;
+    let paths = [];
+
+    svgNodes.forEach(function(child){
+    	if(child.tagName === "path") { 
+    		paths.push(child); 
+    	}
+    });
+
+    plot.width = Number(svgPlot.width.baseVal.value);
+	plot.height = Number(svgPlot.height.baseVal.value);
+
+    if(bckgTransparency.checked) {
+		plotCtx.clearRect(0, 0, plot.width, plot.height);
+	}
+	else {
+		plotCtx.fillStyle = bckgColor.value;
+		plotCtx.fillRect(0, 0, plot.width, plot.height);
+	}
+
+	paths.forEach(function(path){
+		plotCtx.strokeStyle = path.getAttribute("stroke");
+		plotCtx.lineWidth = path.getAttribute("stroke-width");
+		plotCtx.lineJoin = path.getAttribute("stroke-linejoin");
+		plotCtx.lineCap = path.getAttribute("stroke-linecap");
+		plotCtx.stroke(new Path2D(path.getAttribute("d")));
+	});
+
     this.href = plot.toDataURL("image/png");
     this.download="SplineGen(a" + sliders[Param.A].value + 
     				"-b" + sliders[Param.B].value +
@@ -135,15 +163,15 @@ document.getElementById("save-svg").addEventListener("click", function(){
     				"-k" + sliders[Param.K].value + ").svg"
 });
 
-//Ensure the canvas takes as much space as possible without having to scroll
-function updateCanvasDimensions() {
+//Ensure the svg takes as much space as possible while keeping a square shape and without having to scroll
+function updatePlotDimensions() {
 	let target = Math.min(window.innerWidth - settingsPanel.offsetWidth, window.innerHeight - 32);
-	plot.width = target;
-	plot.height = target;
+	svgPlot.setAttribute("width", target + "px");
+	svgPlot.setAttribute("height", target + "px");
 
 	if(target <= settingsPanel.offsetHeight) {
-		plot.width = settingsPanel.offsetHeight;
-		plot.height = settingsPanel.offsetHeight;
+		svgPlot.setAttribute("width", settingsPanel.offsetHeight + "px");
+		svgPlot.setAttribute("height", settingsPanel.offsetHeight + "px");
 	}
 }
 
@@ -154,6 +182,8 @@ function drawCurve() {
 	let MaxThickness = Number(sliders[Param.Thickness].max) + Number(sliders[Param.OTThickness].max);
 	let adjustedThickness = fullThickness + (fullThickness / MaxThickness) * 100;
 	let demiThickness = .5 * adjustedThickness;
+	let w = Number(svgPlot.width.baseVal.value);
+	let h = Number(svgPlot.height.baseVal.value);
 
 	//Fetch the curve (each point having normalized coordinates)
 	let curve = getCurve(
@@ -164,47 +194,39 @@ function drawCurve() {
 		sliders[Param.J].value,
 		sliders[Param.K].value,
 		sliders[Param.Precision].value,
+		true,
 		true);
 
-	//Remap the curve points to the canvas space
+	//Remap the curve points to the svg space
 	let newPoints = [];
 	for(let i = 0; i < curve.length; i++) {
 		newPoints.push([
-			demiThickness + curve[i][0] * (plot.width - adjustedThickness), 
-			demiThickness + curve[i][1] * (plot.height - adjustedThickness)
+			demiThickness + curve[i][0] * (w - adjustedThickness), 
+			demiThickness + curve[i][1] * (h - adjustedThickness)
 		]);
 	}
 
 	plotPanel.style.backgroundColor = bckgColor.value;
 
-	//Clear svg
+	//Setup the svg for drawing
 	let svgParent = svgPlot.parentNode;
 	let svgClone = svgPlot.cloneNode(false);
 	svgParent.removeChild(svgPlot);
 	svgParent.appendChild(svgClone);
 	svgPlot = svgClone;
-	svgPlot.setAttribute("width", plot.width + "px");
-	svgPlot.setAttribute("height", plot.height + "px");
 
-	//Setup the canvas and svg for drawing
-	if(bckgTransparency.checked) {
-		plotCtx.clearRect(0, 0, plot.width, plot.height);
-	}
-	else {
-		plotCtx.fillStyle = bckgColor.value;
-		plotCtx.fillRect(0, 0, plot.width, plot.height);
-
+	if(!bckgTransparency.checked) {
 		let svgBckg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
         svgBckg.setAttribute('x', 0);
         svgBckg.setAttribute('y', 0);
-        svgBckg.setAttribute('width', plot.width);
-        svgBckg.setAttribute('height', plot.height);
+        svgBckg.setAttribute('width', w);
+        svgBckg.setAttribute('height', h);
         svgBckg.setAttribute('fill', bckgColor.value);
         svgPlot.appendChild(svgBckg);
 	}
-
-	//Draw outline first
+	
 	if(newPoints.length > 1) {
+		//Draw outline first
 		if(outlineThickness > 0) {
 			plotCurve(newPoints, fullThickness, outlineColor.value);
 		}
@@ -214,23 +236,15 @@ function drawCurve() {
 }
 
 function plotCurve(points, thickness, color) {
-	plotCtx.lineWidth = thickness;
-	plotCtx.strokeStyle = color;
-	plotCtx.beginPath();
-
-	//Draw the curve
-	plotCtx.moveTo(points[0][0], plot.height - points[0][1]);
-	let svgPath = 'M' + points[0][0] + ' ' + (plot.height - points[0][1]) + ' ';
-
+	//Build the svg path
+	let h = Number(svgPlot.height.baseVal.value);
+	let svgPath = 'M' + points[0][0] + ' ' + (h - points[0][1]) + ' ';
 	for(let i = 1; i < points.length; i++) {
-		plotCtx.lineTo(points[i][0], plot.height - points[i][1]);
-		svgPath += 'L' + points[i][0] + ' ' + (plot.height - points[i][1]) + ' ';
+		svgPath += 'L' + points[i][0] + ' ' + (h - points[i][1]) + ' ';
 	}
-
-	plotCtx.stroke();
 	svgPath += 'Z';
 
-	//Create the svg path
+	//Draw the curve on the svg
 	let path = document.createElementNS("http://www.w3.org/2000/svg", "path");
 	path.setAttribute("d", svgPath);
 	path.setAttribute("stroke", color);
@@ -241,14 +255,31 @@ function plotCurve(points, thickness, color) {
 	svgPlot.appendChild(path);
 }
 
-function getCurve(a, b, c , d , j, k, nbPoints, normalize = false) {
+function getCurve(a, b, c , d , j, k, nbPoints, normalized = false, centered = false) {
 	let curve = [];
+	let min = [Number.MAX_VALUE, Number.MAX_VALUE];
+	let max = [Number.MIN_VALUE, Number.MIN_VALUE];
 
 	for(let t = 0; t <= nbPoints; t++) {
 		let point = getCurvePoint(a, b, c , d , j, k, t / nbPoints);
-		point[0] = remap(point[0], -2, 2, 0, 1, !normalize);
-		point[1] = remap(point[1], -2, 2, 0, 1, !normalize);
+		point[0] = remap(point[0], -2, 2, 0, 1, !normalized);
+		point[1] = remap(point[1], -2, 2, 0, 1, !normalized);
 		curve.push(point);
+
+		if(min[0] > point[0]) { min[0] = point[0]; }
+		if(min[1] > point[1]) { min[1] = point[1]; }
+		if(max[0] < point[0]) { max[0] = point[0]; }
+		if(max[1] < point[1]) { max[1] = point[1]; }
+	}
+
+	if(centered) {
+		let center = [(min[0] + max[0]) / 2, (min[1] + max[1]) / 2];
+		let toCenter = [.5 - center[0], .5 - center[1]];
+
+		curve.forEach(function(point){
+			point[0] += toCenter[0];
+			point[1] += toCenter[1];
+		});
 	}
 
 	return curve;
