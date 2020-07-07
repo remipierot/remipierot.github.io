@@ -100,11 +100,13 @@ bckgTransparency.addEventListener("input", function(){
 		bckgColorLabel.setAttribute("disabled", "disabled");
 		bckgColor.setAttribute("disabled", "disabled");
 		plotPanel.style.backgroundColor = "transparent";
+		plotPanel.style.backgroundImage = "url('checkerboard.png')";
 	}
 	else {
 		bckgColorLabel.removeAttribute("disabled");
 		bckgColor.removeAttribute("disabled");
 		plotPanel.style.backgroundColor = bckgColor.value;
+		plotPanel.style.backgroundImage = "none";
 	}
 
 	drawCurve();

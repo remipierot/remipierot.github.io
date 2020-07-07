@@ -5,6 +5,7 @@
 
 body {
 	font-family: "Lucida Console", Courier, monospace;
+	font-size: 12px;
 	margin: 0px;
 }
 
@@ -18,7 +19,7 @@ body {
 	margin: 10px;
 	display: grid;
 	grid-column-gap: 0px;
-	grid-template-columns: [column1-start] 520px [column1-end column2-start] calc(100% - 520px) [column2-end];
+	grid-template-columns: [column1-start] 350px [column1-end column2-start] calc(100% - 350px) [column2-end];
 }
 
 .panel {
@@ -50,7 +51,7 @@ body {
 
 .title, .sub-title {
 	font-weight: bold;
-	font-size: 20px;
+	font-size: 16px;
 	margin-bottom: 5px;
 }
 
@@ -59,7 +60,7 @@ body {
 }
 
 .sub-title {
-	font-size: 18px;
+	font-size: 14px;
 }
 
 .container:not(#randomize-container):not(#save-container), .formula, .detail {
@@ -98,11 +99,11 @@ body {
 }
 
 #parameters-block .slider {
-	width: 371px;
+	width: 220px;
 }
 
 #options-block .slider {
-	width: 255px;
+	width: 130px;
 }
 
 #randomize {
@@ -117,7 +118,7 @@ body {
 	padding: 10px;
 	text-decoration: none;
 	text-align: center;
-	font-size: 18px;
+	font-size: 14px;
 	background: #1f8fff;
 	width: 100%;
 	cursor: default;
@@ -131,13 +132,17 @@ body {
 	outline: none;
 }
 
+#save-container {
+	text-align: center;
+}
+
 #save-png, #save-svg {
-	width: 228px;
+	width: 145px;
 }
 
 input[type="color"] {
 	border: none;
 	background: none;
-	width: 405px;
+	width: 247px;
 	height: 20px;
 }
