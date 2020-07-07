@@ -165,7 +165,7 @@ document.getElementById("save-svg").addEventListener("click", function(){
 
 //Ensure the svg takes as much space as possible while keeping a square shape and without having to scroll
 function updatePlotDimensions() {
-	let target = Math.min(window.innerWidth - settingsPanel.offsetWidth, window.innerHeight - 32);
+	let target = Math.min(window.innerWidth - settingsPanel.offsetWidth, window.innerHeight - 24);
 	svgPlot.setAttribute("width", target + "px");
 	svgPlot.setAttribute("height", target + "px");
 
