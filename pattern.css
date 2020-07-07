@@ -38,6 +38,7 @@ body {
 
 #plot {
 	margin-bottom: -3px;
+	display: none;
 }
 
 .block {
@@ -105,9 +106,9 @@ body {
 	margin-top: 20px;
 }
 
-#randomize, #save {
+.button {
 	font-family: "Lucida Console", Courier, monospace;
-	display: block;
+	display: inline-block;
 	color: white;
 	border: none;
 	padding: 10px;
@@ -119,16 +120,16 @@ body {
 	cursor: default;
 }
 
-#randomize:hover, #save:hover {
+.button:hover {
 	background: #0063c7;
 }
 
-#randomize:focus, #save:focus {
+.button:focus {
 	outline: none;
 }
 
-#save {
-	width: 487px;
+#save-png, #save-svg {
+	width: 228px;
 }
 
 input[type="color"] {
