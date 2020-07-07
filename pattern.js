@@ -10,9 +10,10 @@ var Param = {
 	OTThickness: 8
 }
 
-var plot = document.createElement('canvas');
+var plot = document.createElement("canvas");
 var plotCtx = plot.getContext("2d");
 var settingsPanel = document.getElementById("settings-panel");
+var collapseSettings = document.getElementById("collapse-settings");
 var plotPanel = document.getElementById("plot-panel");
 var svgPlot = document.getElementById("svg-plot");
 
@@ -22,6 +23,7 @@ var outlineColor = document.getElementById("ot-color");
 var bckgTransparency = document.getElementById("background-transparency");
 var bckgColorLabel = document.getElementById("background-color-label");
 var bckgColor = document.getElementById("background-color");
+var collapseLabel = document.getElementById("collapse-label");
 
 var sliders = [
 				document.getElementById("a-slider"),
@@ -49,6 +51,7 @@ var labels = [
 
 //Setup listeners
 window.addEventListener("load", function(){
+	updateCollapseLabel();
 	updatePlotDimensions()
 	drawCurve();
 	updateLabels();
@@ -165,11 +168,37 @@ document.getElementById("save-svg").addEventListener("click", function(){
     				"-k" + sliders[Param.K].value + ").svg"
 });
 
+collapseSettings.addEventListener("click", function(){
+	let collapsed = settingsPanel.getAttribute("collapsed") === "collapsed";
+
+	if(collapsed) {
+		settingsPanel.setAttribute("collapsed", "expanded");
+	}
+	else {
+		settingsPanel.setAttribute("collapsed", "collapsed");
+	}
+
+	updateCollapseLabel();
+	updatePlotDimensions();
+	drawCurve();
+});
+
 //Ensure the svg takes as much space as possible while keeping a square shape and without having to scroll
 function updatePlotDimensions() {
 	let target = Math.min(svgPlot.parentNode.offsetWidth, window.innerHeight - 22);
 	svgPlot.setAttribute("width", target + "px");
 	svgPlot.setAttribute("height", target + "px");
+}
+
+function updateCollapseLabel() {
+	let collapsed = settingsPanel.getAttribute("collapsed") === "collapsed";
+
+	if(collapsed) {
+		collapseLabel.innerHTML = ">>";
+	}
+	else {
+		collapseLabel.innerHTML = "<<";
+	}
 }
 
 function drawCurve() {

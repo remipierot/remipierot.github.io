@@ -13,7 +13,7 @@
 
 <body>
 	<div id="app">
-		<div class="panel" id="settings-panel">
+		<div class="panel" id="settings-panel" collapsed="expanded">
 			<div class="block" id="formulas-block">
 				<div class="title">Formulas</div>
 				<div class="formula">. x = cos(a * t * 2PI) - cos(b * t * 2PI)^j</div>
@@ -102,6 +102,10 @@
 					<a href="#" class="button" id="save-svg">Save SVG</a>
 				</div>
 			</div>
+		</div>
+
+		<div class="panel" id="collapse-settings">
+			<div class="name" id="collapse-label"></div>
 		</div>
 
 		<div class="panel" id="plot-panel">

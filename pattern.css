@@ -15,11 +15,16 @@ body {
 	cursor: not-allowed;
 }
 
+#settings-panel[collapsed="collapsed"] {
+	width: 0px;
+	overflow-x: hidden;
+}
+
 #app {
 	margin: 10px;
 	display: grid;
 	grid-column-gap: 0px;
-	grid-template-columns: [column1-start] 350px [column1-end column2-start] calc(100% - 350px) [column2-end];
+	grid-template-columns: 350px 20px calc(100% - 370px);
 }
 
 .panel {
@@ -28,10 +33,42 @@ body {
 
 #settings-panel {
 	grid-column: 1;
+	border-right: 0px;
+	width: 100%;
+
+	-moz-transition: width .5s ease-in-out;;
+	-ms-transition: width .5s ease-in-out;;
+	-o-transition: width .5s ease-in-out;;
+	-webkit-transition: width .5s ease-in-out;;
+	transition: width .5s ease-in-out;;
+	overflow-x: hidden;
+}
+
+#collapse-settings {
+	grid-column: 2;
+	border-left: 0px;
+	border-right: 0px;
+	background: #1f8fff;
+}
+
+#collapse-label {
+	color: #ffffff;
+	position: relative;
+	top: 50%;
+	left: 15%;
+	font-weight: bold;
+	cursor: default;
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+	outline: none;
 }
 
 #plot-panel {
-	grid-column: 2;
+	grid-column: 3;
 	border-left: 0px;
 	text-align: center;
 	vertical-align: middle;
@@ -43,6 +80,18 @@ body {
 
 .block {
 	margin: 5px 5px 40px 5px;
+	width: 340px;
+	opacity: 1;
+
+	-moz-transition: opacity .5s ease-in-out;;
+	-ms-transition: opacity .5s ease-in-out;;
+	-o-transition: opacity .5s ease-in-out;;
+	-webkit-transition: opacity .5s ease-in-out;;
+	transition: opacity .5s ease-in-out;;
+}
+
+[collapsed="collapsed"] .block {
+	opacity: 0;
 }
 
 #options-block {
@@ -124,7 +173,7 @@ body {
 	cursor: default;
 }
 
-.button:hover {
+.button:hover, #collapse-settings:hover {
 	background: #0063c7;
 }
 
