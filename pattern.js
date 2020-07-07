@@ -204,7 +204,7 @@ function updatePlotDimensions() {
 	app.style.width = (window.innerWidth - 20) + "px";
 	app.style.height = (window.innerHeight - 20) + "px";
 
-	let target = Math.min(plotPanel.offsetWidth, app.offsetHeight - 2);
+	let target = Math.min(plotPanel.offsetWidth, app.offsetHeight - 4);
 	svgPlot.setAttribute("width", target + "px");
 	svgPlot.setAttribute("height", target + "px");
 }

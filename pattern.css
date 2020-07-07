@@ -84,6 +84,7 @@ body {
 	border-left: 0px;
 	width: calc(100% - 370px);
 	justify-content: center;
+	align-items: center;
 
 	-moz-transition: width .1s ease-in-out;
 	-ms-transition: width .1s ease-in-out;
@@ -94,10 +95,6 @@ body {
 
 #plot-panel[collapsed="collapsed"] {
 	width: calc(100% - 20px);
-}
-
-#svg-plot {
-	margin-bottom: -3px;
 }
 
 .block {
