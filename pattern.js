@@ -13,6 +13,7 @@ var Param = {
 var plot = document.createElement("canvas");
 var plotCtx = plot.getContext("2d");
 var settingsPanel = document.getElementById("settings-panel");
+var settings = document.getElementById("settings");
 var collapseSettings = document.getElementById("collapse-settings");
 var plotPanel = document.getElementById("plot-panel");
 var svgPlot = document.getElementById("svg-plot");
@@ -169,13 +170,17 @@ document.getElementById("save-svg").addEventListener("click", function(){
 });
 
 collapseSettings.addEventListener("click", function(){
-	let collapsed = settingsPanel.getAttribute("collapsed") === "collapsed";
+	let collapsed = settings.getAttribute("collapsed") === "collapsed";
 
 	if(collapsed) {
 		settingsPanel.setAttribute("collapsed", "expanded");
+		settings.setAttribute("collapsed", "expanded");
+		this.setAttribute("collapsed", "expanded");
 	}
 	else {
 		settingsPanel.setAttribute("collapsed", "collapsed");
+		settings.setAttribute("collapsed", "collapsed");
+		this.setAttribute("collapsed", "collapsed");
 	}
 
 	updateCollapseLabel();
@@ -191,7 +196,7 @@ function updatePlotDimensions() {
 }
 
 function updateCollapseLabel() {
-	let collapsed = settingsPanel.getAttribute("collapsed") === "collapsed";
+	let collapsed = settings.getAttribute("collapsed") === "collapsed";
 
 	if(collapsed) {
 		collapseLabel.innerHTML = ">>";
@@ -199,6 +204,8 @@ function updateCollapseLabel() {
 	else {
 		collapseLabel.innerHTML = "<<";
 	}
+
+	//collapseLabel.style.height = (plotPanel.offsetHeight) + "px";
 }
 
 function drawCurve() {

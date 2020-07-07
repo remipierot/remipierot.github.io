@@ -15,16 +15,11 @@ body {
 	cursor: not-allowed;
 }
 
-#settings-panel[collapsed="collapsed"] {
-	width: 0px;
-	overflow-x: hidden;
-}
-
 #app {
 	margin: 10px;
 	display: grid;
 	grid-column-gap: 0px;
-	grid-template-columns: 350px 20px calc(100% - 370px);
+	grid-template-columns: 370px calc(100% - 370px);
 }
 
 .panel {
@@ -36,26 +31,48 @@ body {
 	border-right: 0px;
 	width: 100%;
 
-	-moz-transition: width .5s ease-in-out;;
-	-ms-transition: width .5s ease-in-out;;
-	-o-transition: width .5s ease-in-out;;
-	-webkit-transition: width .5s ease-in-out;;
-	transition: width .5s ease-in-out;;
+	-moz-transition: width .5s ease-in-out;
+	-ms-transition: width .5s ease-in-out;
+	-o-transition: width .5s ease-in-out;
+	-webkit-transition: width .5s ease-in-out;
+	transition: width .5s ease-in-out;
+	overflow-x: hidden;
+}
+
+#settings-panel[collapsed="collapsed"] {
+	width: 20px;
+	overflow-x: hidden;
+}
+
+#settings {
+	width: 350px;
+	display: inline-block;
+
+	-moz-transition: width .5s ease-in-out;
+	-ms-transition: width .5s ease-in-out;
+	-o-transition: width .5s ease-in-out;
+	-webkit-transition: width .5s ease-in-out;
+	transition: width .5s ease-in-out;
+	overflow-x: hidden;
+}
+
+#settings[collapsed="collapsed"] {
+	width: 0px;
 	overflow-x: hidden;
 }
 
 #collapse-settings {
-	grid-column: 2;
-	border-left: 0px;
-	border-right: 0px;
+	float: right;
+	height: 50px;
+	width: 20px;
 	background: #1f8fff;
+	display: inline-block;
 }
 
 #collapse-label {
 	color: #ffffff;
 	position: relative;
-	top: 50%;
-	left: 15%;
+	left: 10%;
 	font-weight: bold;
 	cursor: default;
 	-webkit-touch-callout: none;
@@ -68,7 +85,7 @@ body {
 }
 
 #plot-panel {
-	grid-column: 3;
+	grid-column: 2;
 	border-left: 0px;
 	text-align: center;
 	vertical-align: middle;
