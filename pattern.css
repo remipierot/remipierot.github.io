@@ -17,25 +17,23 @@ body {
 
 #app {
 	margin: 10px;
-	display: grid;
-	grid-column-gap: 0px;
-	grid-template-columns: 370px calc(100% - 370px);
+	display: flex;
 }
 
 .panel {
 	border: 1px solid black;
+	display: flex;
 }
 
 #settings-panel {
-	grid-column: 1;
 	border-right: 0px;
-	width: 100%;
+	width: 370px;
 
-	-moz-transition: width .5s ease-in-out;
-	-ms-transition: width .5s ease-in-out;
-	-o-transition: width .5s ease-in-out;
-	-webkit-transition: width .5s ease-in-out;
-	transition: width .5s ease-in-out;
+	-moz-transition: width .1s ease-in-out;
+	-ms-transition: width .1s ease-in-out;
+	-o-transition: width .1s ease-in-out;
+	-webkit-transition: width .1s ease-in-out;
+	transition: width .1s ease-in-out;
 	overflow-x: hidden;
 }
 
@@ -46,13 +44,12 @@ body {
 
 #settings {
 	width: 350px;
-	display: inline-block;
 
-	-moz-transition: width .5s ease-in-out;
-	-ms-transition: width .5s ease-in-out;
-	-o-transition: width .5s ease-in-out;
-	-webkit-transition: width .5s ease-in-out;
-	transition: width .5s ease-in-out;
+	-moz-transition: width .1s ease-in-out;
+	-ms-transition: width .1s ease-in-out;
+	-o-transition: width .1s ease-in-out;
+	-webkit-transition: width .1s ease-in-out;
+	transition: width .1s ease-in-out;
 	overflow-x: hidden;
 }
 
@@ -62,16 +59,15 @@ body {
 }
 
 #collapse-settings {
-	float: right;
-	height: 50px;
+	height: 100%;
 	width: 20px;
 	background: #1f8fff;
-	display: inline-block;
 }
 
 #collapse-label {
 	color: #ffffff;
 	position: relative;
+	top: 50%;
 	left: 10%;
 	font-weight: bold;
 	cursor: default;
@@ -85,10 +81,19 @@ body {
 }
 
 #plot-panel {
-	grid-column: 2;
 	border-left: 0px;
-	text-align: center;
-	vertical-align: middle;
+	width: calc(100% - 370px);
+	justify-content: center;
+
+	-moz-transition: width .1s ease-in-out;
+	-ms-transition: width .1s ease-in-out;
+	-o-transition: width .1s ease-in-out;
+	-webkit-transition: width .1s ease-in-out;
+	transition: width .1s ease-in-out;
+}
+
+#plot-panel[collapsed="collapsed"] {
+	width: calc(100% - 20px);
 }
 
 #svg-plot {
@@ -100,11 +105,11 @@ body {
 	width: 340px;
 	opacity: 1;
 
-	-moz-transition: opacity .5s ease-in-out;;
-	-ms-transition: opacity .5s ease-in-out;;
-	-o-transition: opacity .5s ease-in-out;;
-	-webkit-transition: opacity .5s ease-in-out;;
-	transition: opacity .5s ease-in-out;;
+	-moz-transition: opacity .1s ease-in-out;;
+	-ms-transition: opacity .1s ease-in-out;;
+	-o-transition: opacity .1s ease-in-out;;
+	-webkit-transition: opacity .1s ease-in-out;;
+	transition: opacity .1s ease-in-out;;
 }
 
 [collapsed="collapsed"] .block {

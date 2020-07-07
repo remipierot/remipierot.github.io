@@ -10,6 +10,7 @@ var Param = {
 	OTThickness: 8
 }
 
+var app = document.getElementById("app");
 var plot = document.createElement("canvas");
 var plotCtx = plot.getContext("2d");
 var settingsPanel = document.getElementById("settings-panel");
@@ -176,21 +177,34 @@ collapseSettings.addEventListener("click", function(){
 		settingsPanel.setAttribute("collapsed", "expanded");
 		settings.setAttribute("collapsed", "expanded");
 		this.setAttribute("collapsed", "expanded");
+		plotPanel.setAttribute("collapsed", "expanded");
 	}
 	else {
 		settingsPanel.setAttribute("collapsed", "collapsed");
 		settings.setAttribute("collapsed", "collapsed");
 		this.setAttribute("collapsed", "collapsed");
+		plotPanel.setAttribute("collapsed", "collapsed");
 	}
 
 	updateCollapseLabel();
-	updatePlotDimensions();
-	drawCurve();
+
+	setTimeout( () =>{
+		updatePlotDimensions();
+		drawCurve();
+	}, 50);
+
+	setTimeout( () =>{
+		updatePlotDimensions();
+		drawCurve();
+	}, 100);
 });
 
 //Ensure the svg takes as much space as possible while keeping a square shape and without having to scroll
 function updatePlotDimensions() {
-	let target = Math.min(svgPlot.parentNode.offsetWidth, window.innerHeight - 22);
+	app.style.width = (window.innerWidth - 20) + "px";
+	app.style.height = (window.innerHeight - 20) + "px";
+
+	let target = Math.min(plotPanel.offsetWidth, app.offsetHeight - 2);
 	svgPlot.setAttribute("width", target + "px");
 	svgPlot.setAttribute("height", target + "px");
 }
@@ -204,8 +218,6 @@ function updateCollapseLabel() {
 	else {
 		collapseLabel.innerHTML = "<<";
 	}
-
-	//collapseLabel.style.height = (plotPanel.offsetHeight) + "px";
 }
 
 function drawCurve() {
