@@ -143,7 +143,7 @@ document.getElementById("save-png").addEventListener("click", function(){
 
     SVGPathToCanvas(svgPaths, 
     	canvasPlot, 
-    	canvasPlot.getContext("2D"), 
+    	canvasPlot.getContext("2d"), 
     	backgroundColor, 
     	svgPlot.width.baseVal.value, 
     	svgPlot.height.baseVal.value);
