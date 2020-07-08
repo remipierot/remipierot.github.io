@@ -2,8 +2,7 @@ import {
 	fillWindowWith, 
 	remap, 
 	plotCurveToSVG,
-	SVGPathToCanvas,
-	isColor
+	SVGPathToCanvas
 } from '../utils.js';
 
 var Param = {
