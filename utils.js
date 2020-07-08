@@ -26,17 +26,9 @@ function remap(value, currentMin, currentMax, targetMin, targetMax, rounded = tr
 	return rounded ? Math.round(targetValue) : targetValue;
 }
 
-function plotCurveToSVG(points, thickness, color, svgContainer, clearPreviousDrawing, backgroundColor = "none") {
-	let svgPlot = svgContainer.childNodes[0];
+function plotCurveToSVG(points, thickness, color, svgPlot, clearPreviousDrawing, backgroundColor = "none") {
 	let w = Number(svgPlot.width.baseVal.value);
 	let h = Number(svgPlot.height.baseVal.value);
-
-	if(clearPreviousDrawing === true) {
-		let svgClone = svgPlot.cloneNode(false);
-		svgContainer.removeChild(svgPlot);
-		svgContainer.appendChild(svgClone);
-		svgPlot = svgClone;
-	}
 
 	if(isColor(backgroundColor)) {
 		let svgBckg = document.createElementNS("http://www.w3.org/2000/svg", "rect");

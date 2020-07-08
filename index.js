@@ -5,9 +5,9 @@ import {
 var app = document.getElementById("app");
 
 window.addEventListener("load", function(){
-	fillWindowWith();
+	fillWindowWith(app);
 });
 
 window.addEventListener("resize", function(){
-	fillWindowWith();
+	fillWindowWith(app);
 });
