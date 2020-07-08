@@ -9,3 +9,55 @@ body {
 	display: flex;
 	border: 1px black solid;
 }
+
+.panel {
+	display: flex;
+}
+
+.block {
+	margin: 5px 5px 40px 5px;
+}
+
+.title {
+	font-weight: bold;
+	font-size: 16px;
+	margin-bottom: 15px;
+}
+
+a {
+	text-decoration: none;
+}
+
+.sub-title {
+	font-weight: bold;
+	font-size: 14px;
+	margin: 20px 0px 5px 20px;
+}
+
+.description, .img-list {
+	margin: 0px 0px 10px 20px;
+}
+
+.img-list {
+	display: flex;
+	align-items: center;
+	height: 120px;
+}
+
+img {
+	border: 1px solid #bfbfbf;
+	border-radius: 10px;
+	width: 100px;
+	margin-right: 5px;
+
+	-moz-transition: width .2s ease-in-out;
+	-ms-transition: width .2s ease-in-out;
+	-o-transition: width .2s ease-in-out;
+	-webkit-transition: width .2s ease-in-out;
+	transition: width .2s ease-in-out;
+}
+
+img:hover {
+	box-shadow: 0 0 2px 2px #37D0FC;
+	width: 120px;
+}
