@@ -1,6 +1,6 @@
 import { 
 	fillWindowWith
-} from 'utils.js';
+} from './utils.js';
 
 var app = document.getElementById("app");
 

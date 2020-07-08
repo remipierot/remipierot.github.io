@@ -26,15 +26,15 @@ function remap(value, currentMin, currentMax, targetMin, targetMax, rounded = tr
 	return rounded ? Math.round(targetValue) : targetValue;
 }
 
-function plotCurveToSVG(points, thickness, color, svgPlot, clearPreviousDrawing, backgroundColor = "none") {
+function plotCurveToSVG(points, thickness, color, svgContainer, clearPreviousDrawing, backgroundColor = "none") {
+	let svgPlot = svgContainer.childNodes[0];
 	let w = Number(svgPlot.width.baseVal.value);
 	let h = Number(svgPlot.height.baseVal.value);
 
 	if(clearPreviousDrawing === true) {
-		let svgParent = svgPlot.parentNode;
 		let svgClone = svgPlot.cloneNode(false);
-		svgParent.removeChild(svgPlot);
-		svgParent.appendChild(svgClone);
+		svgContainer.removeChild(svgPlot);
+		svgContainer.appendChild(svgClone);
 		svgPlot = svgClone;
 	}
 
