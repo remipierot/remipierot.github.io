@@ -1,3 +1,11 @@
+import { 
+	fillWindowWith, 
+	remap, 
+	plotCurveToSVG,
+	SVGPathToCanvas,
+	isColor
+} from '../utils.js';
+
 var Param = {
 	A: 0,
 	B: 1,
@@ -122,33 +130,7 @@ bckgColor.addEventListener("input", function(){
 })
 
 document.getElementById("save-png").addEventListener("click", function(){
-    let svgNodes = svgPlot.childNodes;
-    let paths = [];
-
-    svgNodes.forEach(function(child){
-    	if(child.tagName === "path") { 
-    		paths.push(child); 
-    	}
-    });
-
-    plot.width = Number(svgPlot.width.baseVal.value);
-	plot.height = Number(svgPlot.height.baseVal.value);
-
-    if(bckgTransparency.checked) {
-		plotCtx.clearRect(0, 0, plot.width, plot.height);
-	}
-	else {
-		plotCtx.fillStyle = bckgColor.value;
-		plotCtx.fillRect(0, 0, plot.width, plot.height);
-	}
-
-	paths.forEach(function(path){
-		plotCtx.strokeStyle = path.getAttribute("stroke");
-		plotCtx.lineWidth = path.getAttribute("stroke-width");
-		plotCtx.lineJoin = path.getAttribute("stroke-linejoin");
-		plotCtx.lineCap = path.getAttribute("stroke-linecap");
-		plotCtx.stroke(new Path2D(path.getAttribute("d")));
-	});
+    SVGPathToCanvas(svgPlot, plot);
 
     this.href = plot.toDataURL("image/png");
     this.download="SplineGen(a" + sliders[Param.A].value + 
@@ -161,6 +143,7 @@ document.getElementById("save-png").addEventListener("click", function(){
 
 document.getElementById("save-svg").addEventListener("click", function(){
 	let svgBlob = new Blob([svgPlot.outerHTML], {type:"image/svg+xml;charset=utf-8"});
+
     this.href = URL.createObjectURL(svgBlob);
     this.download="SplineGen(a" + sliders[Param.A].value + 
     				"-b" + sliders[Param.B].value +
@@ -201,8 +184,7 @@ collapseSettings.addEventListener("click", function(){
 
 //Ensure the svg takes as much space as possible while keeping a square shape and without having to scroll
 function updatePlotDimensions() {
-	app.style.width = (window.innerWidth - 20) + "px";
-	app.style.height = (window.innerHeight - 20) + "px";
+	fillWindowWith(app);
 
 	let target = Math.min(plotPanel.offsetWidth, app.offsetHeight - 4);
 	svgPlot.setAttribute("width", target + "px");
@@ -229,6 +211,7 @@ function drawCurve() {
 	let demiThickness = .5 * adjustedThickness;
 	let w = Number(svgPlot.width.baseVal.value);
 	let h = Number(svgPlot.height.baseVal.value);
+	let drawBackground = !bckgTransparency.checked;
 
 	//Fetch the curve (each point having normalized coordinates)
 	let curve = getCurve(
@@ -252,52 +235,16 @@ function drawCurve() {
 	}
 
 	plotPanel.style.backgroundColor = bckgColor.value;
-
-	//Setup the svg for drawing
-	let svgParent = svgPlot.parentNode;
-	let svgClone = svgPlot.cloneNode(false);
-	svgParent.removeChild(svgPlot);
-	svgParent.appendChild(svgClone);
-	svgPlot = svgClone;
-
-	if(!bckgTransparency.checked) {
-		let svgBckg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-        svgBckg.setAttribute('x', 0);
-        svgBckg.setAttribute('y', 0);
-        svgBckg.setAttribute('width', w);
-        svgBckg.setAttribute('height', h);
-        svgBckg.setAttribute('fill', bckgColor.value);
-        svgPlot.appendChild(svgBckg);
-	}
 	
 	if(newPoints.length > 1) {
 		//Draw outline first
 		if(outlineThickness > 0) {
-			plotCurve(newPoints, fullThickness, outlineColor.value);
+			plotCurveToSVG(newPoints, fullThickness, outlineColor.value, svgPlot, true, drawBackground ? bckgColor.value : "");
+			drawBackground = false;
 		}
 
-		plotCurve(newPoints, curveThickness, curveColor.value);
+		plotCurveToSVG(newPoints, curveThickness, curveColor.value, svgPlot, false, drawBackground ? bckgColor.value : "");
 	}
-}
-
-function plotCurve(points, thickness, color) {
-	//Build the svg path
-	let h = Number(svgPlot.height.baseVal.value);
-	let svgPath = 'M' + points[0][0] + ' ' + (h - points[0][1]) + ' ';
-	for(let i = 1; i < points.length; i++) {
-		svgPath += 'L' + points[i][0] + ' ' + (h - points[i][1]) + ' ';
-	}
-	svgPath += 'Z';
-
-	//Draw the curve on the svg
-	let path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-	path.setAttribute("d", svgPath);
-	path.setAttribute("stroke", color);
-	path.setAttribute("stroke-width", thickness);
-	path.setAttribute("stroke-linejoin", "round");
-	path.setAttribute("stroke-linecap", "round");
-	path.setAttribute("fill", "none");
-	svgPlot.appendChild(path);
 }
 
 function getCurve(a, b, c , d , j, k, nbPoints, normalized = false, centered = false) {
@@ -343,19 +290,6 @@ function getCurvePoint(a, b, c, d, j, k, t) {
 	point[1] = Math.sin(c * angle) - Math.pow(Math.sin(d * angle), k);
 
 	return point;
-}
-
-function remap(value, currentMin, currentMax, targetMin, targetMax, rounded = true) {
-	//Normalize the value to get its relative position in [0, 1]
-	let targetValue = (value - currentMin) / (currentMax - currentMin);
-
-	//Having [0,1] as the target space is the same thing as normalization, which is already achieved at this point
-	if(targetMin != 0 || targetMax != 1) {
-		//Use the relative position to place the value in the target space [targetMin, targetMax]
-		targetValue = targetMin + (targetMax - targetMin) * targetValue
-	}
-
-	return rounded ? Math.round(targetValue) : targetValue;
 }
 
 function randomizeValues() {

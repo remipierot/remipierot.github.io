@@ -1,0 +1,122 @@
+<!--
+   -	Slider based on:
+   -		https://www.w3schools.com/howto/howto_js_rangeslider.asp
+  -->
+
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>SplineGen</title>
+	<link href="spline-gen.css" rel="stylesheet">
+	<script type="module" src="../utils.js"></script>
+</head>
+
+<body>
+	<div id="app">
+		<div class="panel" id="settings-panel">
+			<div id="settings" collapsed="expanded">
+				<div class="block" id="formulas-block">
+					<div class="title">Formulas</div>
+					<div class="formula">. x = cos(a * t * 2PI) - cos(b * t * 2PI)^j</div>
+					<div class="formula">. y = sin(c * t * 2PI) - sin(d * t * 2PI)^k</div>
+				</div>
+
+				<div class="block" id="details-block">
+					<div class="title">Details</div>
+					<div class="detail">. a, b, c, d, j, k can be arbitrarily chosen</div>
+					<div class="detail">. If b = 0, j will not have any effect</div>
+					<div class="detail">. If d = 0, k will not have any effect</div>
+				</div>
+
+				<div class="block" id="parameters-block">
+					<div class="title">Parameters</div>
+					<div class="container" id="a-container">
+						<span class="name">a<span id="a-range-label"></span></span>
+						<input type="range" min="0" max="10" value="1" class="slider" id="a-slider">
+					</div>
+					<div class="container" id="b-container">
+						<span class="name">b<span id="b-range-label"></span></span>
+						<input type="range" min="0" max="10" value="10" class="slider" id="b-slider">
+					</div>
+					<div class="container" id="c-container">
+						<span class="name">c<span id="c-range-label"></span></span>
+						<input type="range" min="0" max="10" value="10" class="slider" id="c-slider">
+					</div>
+					<div class="container" id="d-container">
+						<span class="name">d<span id="d-range-label"></span></span>
+						<input type="range" min="0" max="10" value="9" class="slider" id="d-slider">
+					</div>
+					<div class="container" id="j-container">
+						<span class="name">j<span id="j-range-label"></span></span>
+						<input type="range" min="1" max="3" value="3" class="slider" id="j-slider">
+					</div>
+					<div class="container" id="k-container">
+						<span class="name">k<span id="k-range-label"></span></span>
+						<input type="range" min="1" max="3" value="1" class="slider" id="k-slider">
+					</div>
+					<div class="container" id="randomize-container">
+						<button type="button" class="button" id="randomize">Randomize</button>
+					</div>
+				</div>
+
+				<div class="block" id="options-block">
+					<div class="title">Drawing options</div>
+					<div class="sub-block" id="curve-block">
+						<div class="sub-title">Curve</div>
+						<div class="container" id="precision-container">
+							<span class="name">Precision<span id="precision-range-label"></span></span>
+							<input type="range" min="0" max="500" value="500" class="slider" id="precision-slider">
+						</div>
+						<div class="container" id="thickness-container">
+							<span class="name">Thickness<span id="thickness-range-label"></span></span>
+							<input type="range" min="1" max="50" value="20" class="slider" id="thickness-slider">
+						</div>
+						<div class="container" id="curve-color-container">
+							<span class="name" id="curve-color-label">Color</span>
+							<input type="color" id="curve-color" value="#000000">
+						</div>
+					</div>
+					<div class="sub-block" id="outline-block">
+						<div class="sub-title">Outline</div>
+						<div class="container" id="ot-thickness-container">
+							<span class="name">Thickness<span id="ot-thickness-range-label"></span></span>
+							<input type="range" min="0" max="50" value="20" class="slider" id="ot-thickness-slider">
+						</div>
+						<div class="container" id="ot-color-container">
+							<span class="name" id="ot-color-label">Color</span>
+							<input type="color" id="ot-color" value="#ffffff">
+						</div>
+					</div>
+					<div class="sub-block" id="background-block">
+						<div class="sub-title">Background</div>
+						<div class="container" id="background-transparency-container">
+							<span class="name" id="background-transparency-label">Transparent</span>
+							<input type="checkbox" id="background-transparency"/>
+						</div>
+						<div class="container" id="background-color-container">
+							<span class="name" id="background-color-label">Color</span>
+							<input type="color" id="background-color" value="#000000">
+						</div>
+					</div>
+					<div class="container" id="save-container">
+						<a href="#" class="button" id="save-png">Save PNG</a>
+						<a href="#" class="button" id="save-svg">Save SVG</a>
+					</div>
+				</div>
+			</div>
+			<div id="collapse-settings">
+				<div class="name" id="collapse-label"></div>
+			</div>
+		</div>
+
+		<div class="panel" id="plot-panel">
+			<svg xmlns="http://www.w3.org/2000/svg" id="svg-plot"></svg>
+		</div>
+	</div>
+
+	<script type="module" src="spline-gen.js"></script>
+</body>
+
+</html>
+
