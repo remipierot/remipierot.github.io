@@ -19,13 +19,12 @@ var Param = {
 }
 
 var app = document.getElementById("app");
-var plot = document.createElement("canvas");
-var plotCtx = plot.getContext("2d");
 var settingsPanel = document.getElementById("settings-panel");
 var settings = document.getElementById("settings");
 var collapseSettings = document.getElementById("collapse-settings");
 var plotPanel = document.getElementById("plot-panel");
 var svgPlot = document.getElementById("svg-plot");
+var canvasPlot = document.createElement("canvas");
 
 var curveColor = document.getElementById("curve-color");
 var outlineColorLabel = document.getElementById("ot-color-label");
@@ -130,9 +129,26 @@ bckgColor.addEventListener("input", function(){
 })
 
 document.getElementById("save-png").addEventListener("click", function(){
-    SVGPathToCanvas(svgPlot, plot);
+	let svgPaths = [];
+	let backgroundColor = "none";
 
-    this.href = plot.toDataURL("image/png");
+	svgPlot.childNodes.forEach(function(child){
+		if(child.tagName === "rect") {
+			backgroundColor = child.getAttribute("fill");
+		}
+		else if(child.tagName === "path") { 
+			svgPaths.push(child); 
+		}
+	});
+
+    SVGPathToCanvas(svgPaths, 
+    	canvasPlot, 
+    	canvasPlot.getContext("2D"), 
+    	backgroundColor, 
+    	svgPlot.width.baseVal.value, 
+    	svgPlot.height.baseVal.value);
+
+    this.href = canvasPlot.toDataURL("image/png");
     this.download="SplineGen(a" + sliders[Param.A].value + 
     				"-b" + sliders[Param.B].value +
     				"-c" + sliders[Param.C].value +

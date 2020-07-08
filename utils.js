@@ -60,23 +60,9 @@ function plotCurveToSVG(points, thickness, color, svgPlot, backgroundColor = "no
 	}
 }
 
-function SVGPathToCanvas(svgPlot, canvasPlot) {
-	let svgNodes = svgPlot.childNodes;
-	let paths = [];
-	let backgroundColor = "";
-	let canvasCtx = canvasPlot.getContext("2D");
-
-	svgNodes.forEach(function(child){
-		if(child.tagName === "rect") {
-			backgroundColor = child.getAttribute("fill");
-		}
-		else if(child.tagName === "path") { 
-			paths.push(child); 
-		}
-	});
-
-	canvasPlot.width = Number(svgPlot.width.baseVal.value);
-	canvasPlot.height = Number(svgPlot.height.baseVal.value);
+function SVGPathToCanvas(svgPaths, canvasPlot, canvasCtx, backgroundColor, width, height) {
+	canvasPlot.width = Number(width);
+	canvasPlot.height = Number(height);
 
 	if(isColor(backgroundColor)) {
 		canvasCtx.fillStyle = backgroundColor;
@@ -86,7 +72,7 @@ function SVGPathToCanvas(svgPlot, canvasPlot) {
 		canvasCtx.clearRect(0, 0, canvasPlot.width, canvasPlot.height);
 	}
 
-	paths.forEach(function(path){
+	svgPaths.forEach(function(path){
 		canvasCtx.strokeStyle = path.getAttribute("stroke");
 		canvasCtx.lineWidth = path.getAttribute("stroke-width");
 		canvasCtx.lineJoin = path.getAttribute("stroke-linejoin");
@@ -99,5 +85,7 @@ function isColor(strColor){
 	var s = new Option().style;
 	s.color = strColor;
 
-	return s.color == strColor;
+	//[0] is 'r', [1] is 'g', [2] is 'b'
+	//if strColor is not a color, these are 'undefined'
+	return s.color[0] != "undefined";
 }
