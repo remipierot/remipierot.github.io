@@ -26,7 +26,7 @@ function remap(value, currentMin, currentMax, targetMin, targetMax, rounded = tr
 	return rounded ? Math.round(targetValue) : targetValue;
 }
 
-function plotCurveToSVG(points, thickness, color, svgPlot, clearPreviousDrawing, backgroundColor = "none") {
+function plotCurveToSVG(points, thickness, color, svgPlot, backgroundColor = "none") {
 	let w = Number(svgPlot.width.baseVal.value);
 	let h = Number(svgPlot.height.baseVal.value);
 

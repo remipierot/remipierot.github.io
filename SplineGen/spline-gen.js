@@ -244,11 +244,11 @@ function drawCurve() {
 	if(newPoints.length > 1) {
 		//Draw outline first
 		if(outlineThickness > 0) {
-			plotCurveToSVG(newPoints, fullThickness, outlineColor.value, svgPlot, drawBackground ? bckgColor.value : "");
+			plotCurveToSVG(newPoints, fullThickness, outlineColor.value, svgPlot, drawBackground ? bckgColor.value : "none");
 			drawBackground = false;
 		}
 
-		plotCurveToSVG(newPoints, curveThickness, curveColor.value, svgPlot, drawBackground ? bckgColor.value : "");
+		plotCurveToSVG(newPoints, curveThickness, curveColor.value, svgPlot, drawBackground ? bckgColor.value : "none");
 	}
 }
 
