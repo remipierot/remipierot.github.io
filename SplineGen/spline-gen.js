@@ -129,24 +129,7 @@ bckgColor.addEventListener("input", function(){
 })
 
 document.getElementById("save-png").addEventListener("click", function(){
-	let svgPaths = [];
-	let backgroundColor = "none";
-
-	svgPlot.childNodes.forEach(function(child){
-		if(child.tagName === "rect") {
-			backgroundColor = child.getAttribute("fill");
-		}
-		else if(child.tagName === "path") { 
-			svgPaths.push(child); 
-		}
-	});
-
-    SVGPathToCanvas(svgPaths, 
-    	canvasPlot, 
-    	canvasPlot.getContext("2d"), 
-    	backgroundColor, 
-    	svgPlot.width.baseVal.value, 
-    	svgPlot.height.baseVal.value);
+    SVGPathToCanvas(svgPlot, canvasPlot);
 
     this.href = canvasPlot.toDataURL("image/png");
     this.download="SplineGen(a" + sliders[Param.A].value + 
