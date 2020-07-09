@@ -92,11 +92,21 @@ window.addEventListener("load", function(){
 	const w = renderer.domElement.clientWidth;
 	const h = renderer.domElement.clientHeight;
 	const texType = THREE.FloatType;
+	const texFilter = THREE.NearestFilter;
 	const texWrap = THREE.RepeatWrapping;
-	const texAniso = 0;
 
-	current = new THREE.WebGLRenderTarget(w, h, {type: texType, wrapS: texWrap, wrapT: texWrap, anisotropy: texAniso});
-	next    = new THREE.WebGLRenderTarget(w, h, {type: texType, wrapS: texWrap, wrapT: texWrap, anisotropy: texAniso});
+	current = new THREE.WebGLRenderTarget(w, h, {
+		type: texType, 
+		wrapS: texWrap, 
+		wrapT: texWrap, 
+		magFilter: texFilter,
+		minFilter: texFilter});
+	next = new THREE.WebGLRenderTarget(w, h, {
+		type: texType, 
+		wrapS: texWrap, 
+		wrapT: texWrap, 
+		magFilter: texFilter,
+		minFilter: texFilter});
 
 	environment.f.value     = 0.055;
 	environment.k.value     = 0.062;
