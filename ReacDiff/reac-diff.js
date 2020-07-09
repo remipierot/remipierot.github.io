@@ -93,9 +93,10 @@ window.addEventListener("load", function(){
 	const h = renderer.domElement.clientHeight;
 	const texType = THREE.FloatType;
 	const texWrap = THREE.RepeatWrapping;
+	const texAniso = 0;
 
-	current = new THREE.WebGLRenderTarget(w, h, {type: texType, wrapS: texWrap, wrapT: texWrap});
-	next    = new THREE.WebGLRenderTarget(w, h, {type: texType, wrapS: texWrap, wrapT: texWrap});
+	current = new THREE.WebGLRenderTarget(w, h, {type: texType, wrapS: texWrap, wrapT: texWrap, anisotropy: texAniso});
+	next    = new THREE.WebGLRenderTarget(w, h, {type: texType, wrapS: texWrap, wrapT: texWrap, anisotropy: texAniso});
 
 	environment.f.value     = 0.055;
 	environment.k.value     = 0.062;
