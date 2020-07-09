@@ -50,7 +50,7 @@ const sliders = {
 	speed:  {slider: document.getElementById("speed-slider"), 
 			 label:  document.getElementById("speed-range-label"),
 			 target: speed,
-			 targetBounds: {min: .0, max: 10.0}}
+			 targetBounds: {min: .0, max: 5.0}}
 }
 
 //Material holding the fragment shader responsible for the Gray-Scott model computation
@@ -203,7 +203,7 @@ function remap(value, currentBounds, targetBounds) {
 }
 
 function fillWindow() {
-	renderer.setSize(window.innerWidth - 350 - 23, window.innerHeight - 25);
+	renderer.setSize(window.innerWidth - 470 - 23, window.innerHeight - 25);
 
 	const scaledDim = getScaledDimensions();
 	const texType = THREE.FloatType;

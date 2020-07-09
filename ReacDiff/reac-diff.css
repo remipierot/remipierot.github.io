@@ -15,13 +15,13 @@ body {
 }
 
 #settings-panel {
-	width: 350px;
+	width: 470px;
 	border: 1px solid black;
 	border-width: 0px 1px 0px 0px;
 }
 
 #settings {
-	width: 350px;
+	width: 470px;
 }
 
 #plot-panel {
@@ -33,7 +33,7 @@ body {
 
 .block {
 	margin: 5px 5px 40px 5px;
-	width: 340px;
+	width: 460px;
 }
 
 .title {
@@ -42,7 +42,7 @@ body {
 	margin-bottom: 5px;
 }
 
-.container:not(#randomize-container) {
+.container,.formula, .detail  {
 	margin: 0px 0px 10px 20px;
 }
 
@@ -78,31 +78,14 @@ body {
 }
 
 #parameters-block .slider {
-	width: calc(100% - 30px);
+	width: calc(100% - 170px);
 }
 
-#randomize {
-	margin-top: 20px;
+.name {
+	white-space:pre;
 }
 
-.button {
-	font-family: "Lucida Console", Courier, monospace;
-	display: inline-block;
-	color: white;
-	border: none;
-	padding: 10px;
+a {
 	text-decoration: none;
-	text-align: center;
-	font-size: 14px;
-	background: #1f8fff;
-	width: 100%;
-	cursor: default;
-}
-
-.button:hover, #collapse-settings:hover {
-	background: #0063c7;
-}
-
-.button:focus {
-	outline: none;
+	font-weight: bold;
 }

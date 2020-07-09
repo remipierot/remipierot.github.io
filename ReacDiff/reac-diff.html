@@ -10,26 +10,44 @@
 	<div id="app">
 		<div class="panel" id="settings-panel">
 			<div id="settings" collapsed="expanded">
+				<div class="block" id="formulas-block">
+					<div class="title">Formulas</div>
+					<div class="formula">. A' = A + (DA * Laplacian(A) - A * B^2 + f * (1 - A)) * dt</div>
+					<div class="formula">. B' = B + (DB * Laplacian(B) + A * B^2 - (k + f) * B)) * dt</div>
+				</div>
+
+				<div class="block" id="details-block">
+					<div class="title">Details</div>
+					<div class="detail">. A is a chemical added at a rate f (feed)</div>
+					<div class="detail">. B is a chemical removed at a rate k (kill)</div>
+					<div class="detail">. Two B together can convert an A into a B (reaction)</div>
+					<div class="detail">. DA/DB are the diffusion rates for A and B (diffusion)</div>
+					<div class="detail">. Laplacian gives the average value of a chemical locally</div>
+					<div class="detail">. The more A there is in a cell, the whiter it is</div>
+					<div class="detail">. Conversely, the more B the darker</div>
+					<div class="detail">. More info <a href="http://karlsims.com/rd.html">here</a></div>
+				</div>
+
 				<div class="block" id="parameters-block">
 					<div class="title">Parameters</div>
 					<div class="container" id="f-container">
-						<span class="name">f<span id="f-range-label"></span></span>
+						<span class="name">    f<span id="f-range-label"></span></span>
 						<input type="range" min="0" max="1000" class="slider" id="f-slider">
 					</div>
 					<div class="container" id="k-container">
-						<span class="name">k<span id="k-range-label"></span></span>
+						<span class="name">    k<span id="k-range-label"></span></span>
 						<input type="range" min="0" max="1000" class="slider" id="k-slider">
 					</div>
 					<div class="container" id="da-container">
-						<span class="name">dA<span id="da-range-label"></span></span>
+						<span class="name">   DA<span id="da-range-label"></span></span>
 						<input type="range" min="0" max="1000" class="slider" id="da-slider">
 					</div>
 					<div class="container" id="db-container">
-						<span class="name">dB<span id="db-range-label"></span></span>
+						<span class="name">   DB<span id="db-range-label"></span></span>
 						<input type="range" min="0" max="1000" class="slider" id="db-slider">
 					</div>
 					<div class="container" id="speed-container">
-						<span class="name">speed<span id="speed-range-label"></span></span>
+						<span class="name">Speed<span id="speed-range-label"></span></span>
 						<input type="range" min="0" max="100" class="slider" id="speed-slider">
 					</div>
 				</div>
@@ -85,14 +103,14 @@
 
 			vec2 laplacian = diagonal * _diagonals + direct * _directs + myself * _myself;
 
-			vec2 nextUV = _myself + vec2(
+			vec2 next = _myself + vec2(
 				da * laplacian.r - _myself.r * _myself.g * _myself.g + f * (1.0 - _myself.r),
 				db * laplacian.g + _myself.r * _myself.g * _myself.g - (k + f) *  _myself.g);
 
 			//If there is a click and we are currently within the wanted radius
-			if(click.x >= 0.0 && distance(currentUV / texel, click) < clickRadius) { nextUV.g = 1.0; }
+			if(click.x >= 0.0 && distance(currentUV / texel, click) < clickRadius) { next.g = 1.0; }
 
-			gl_FragColor = vec4(clamp(nextUV.r, 0.0, 1.0), clamp(nextUV.g, 0.0, 1.0), 0.0, 1.0);
+			gl_FragColor = vec4(clamp(next.r, 0.0, 1.0), clamp(next.g, 0.0, 1.0), 0.0, 1.0);
 		}
 	</script>
 
