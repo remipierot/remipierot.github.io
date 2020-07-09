@@ -1,0 +1,108 @@
+body {
+	font-family: "Lucida Console", Courier, monospace;
+	font-size: 12px;
+	margin: 0px;
+}
+
+#app {
+	margin: 10px;
+	display: flex;
+	border: 1px black solid;
+}
+
+.panel {
+	display: flex;
+}
+
+#settings-panel {
+	width: 350px;
+	border: 1px solid black;
+	border-width: 0px 1px 0px 0px;
+}
+
+#settings {
+	width: 350px;
+}
+
+#plot-panel {
+	width: calc(100% - 350px);
+	justify-content: center;
+	align-items: center;
+	background: #000000;
+}
+
+.block {
+	margin: 5px 5px 40px 5px;
+	width: 340px;
+}
+
+.title {
+	font-weight: bold;
+	font-size: 16px;
+	margin-bottom: 5px;
+}
+
+.container:not(#randomize-container) {
+	margin: 0px 0px 10px 20px;
+}
+
+.slider {
+	-webkit-appearance: none;
+	height: 2px; 
+	background: #e1e1e1;
+	outline: none;
+	opacity: 0.7;
+	-webkit-transition: .2s;
+	transition: opacity .2s;
+	margin: 0px;
+}
+
+.slider::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	appearance: none;
+	width: 20px;
+	height: 20px;
+	border-radius: 50%; 
+	background: #1f8fff;
+}
+
+.slider::-moz-range-thumb {
+	width: 20px;
+	height: 20px;
+	border-radius: 50%;
+	background: #1f8fff;
+}
+
+.slider:hover, .slider:focus {
+	background: #b3b3b3;
+}
+
+#parameters-block .slider {
+	width: calc(100% - 30px);
+}
+
+#randomize {
+	margin-top: 20px;
+}
+
+.button {
+	font-family: "Lucida Console", Courier, monospace;
+	display: inline-block;
+	color: white;
+	border: none;
+	padding: 10px;
+	text-decoration: none;
+	text-align: center;
+	font-size: 14px;
+	background: #1f8fff;
+	width: 100%;
+	cursor: default;
+}
+
+.button:hover, #collapse-settings:hover {
+	background: #0063c7;
+}
+
+.button:focus {
+	outline: none;
+}

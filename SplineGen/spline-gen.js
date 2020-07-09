@@ -3,7 +3,7 @@ import {
 	remap, 
 	plotCurveToSVG,
 	SVGPathToCanvas
-} from '../utils.js';
+} from '../dependencies/utils.js';
 
 var Param = {
 	A: 0,
