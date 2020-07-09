@@ -19,40 +19,38 @@ const environment = {
 	da:          {type:  "f", value: 0.0},			//A diffusion rate
 	db:          {type:  "f", value: 0.0},			//B diffusion rate
 	texel:       {type: "v2", value: undefined},	//Texture pixel
-	convolution: {type: "m3", value: undefined},	//Factors to compute the Laplacian
+	diagonal:    {type:  "f", value: 0.0},			//Laplacian weight for diagonal neighbours
+	direct:      {type:  "f", value: 0.0},			//Laplacian weight for direct neighbours
+	myself:      {type:  "f", value: 0.0},			//Laplacian weight for myself
 	click:       {type: "v2", value: undefined},	//Position of a click, if any
 	clickRadius: {type:  "f", value: 0.0}			//Radius of a click
 };
 
 //Speed of the reaction-diffusion
-const speed = {value: 1};
+const speed = {value: 5};
 
 //Slider objects linked to environment variables
 const sliders = {
 	f:      {slider: document.getElementById("f-slider"),
-			 label: document.getElementById("f-range-label"),
+			 label:  document.getElementById("f-range-label"),
 			 target: environment.f,
 			 targetBounds: {min: .0, max: .1}},
 	k:      {slider: document.getElementById("k-slider"), 
-			 label: document.getElementById("k-range-label"),
+			 label:  document.getElementById("k-range-label"),
 			 target: environment.k,
 			 targetBounds: {min: .0, max: .1}},
 	da:     {slider: document.getElementById("da-slider"), 
-			 label: document.getElementById("da-range-label"),
+			 label:  document.getElementById("da-range-label"),
 			 target: environment.da,
 			 targetBounds: {min: .0, max: 1.0}},
 	db:     {slider: document.getElementById("db-slider"), 
-			 label: document.getElementById("db-range-label"),
+			 label:  document.getElementById("db-range-label"),
 			 target: environment.db,
 			 targetBounds: {min: .0, max: 1.0}},
 	speed:  {slider: document.getElementById("speed-slider"), 
-			 label: document.getElementById("speed-range-label"),
+			 label:  document.getElementById("speed-range-label"),
 			 target: speed,
-			 targetBounds: {min: .0, max: 10.0}},
-	radius: {slider: document.getElementById("radius-slider"), 
-			 label: document.getElementById("radius-range-label"),
-			 target: environment.clickRadius,
-			 targetBounds: {min: 1.0, max: 10.0}},
+			 targetBounds: {min: .0, max: 10.0}}
 }
 
 //Material holding the fragment shader responsible for the Gray-Scott model computation
@@ -80,56 +78,29 @@ var current = undefined;
 
 //Texture representing the next state of the environment
 var next = undefined;
+
+//Scaling of the renderer dimensions
+var dimensionScale = .5;
 // --------------------------------------------------------------------------------------
 
 // ------------------------------- Listeners Registration -------------------------------
 window.addEventListener("load", function(){
-	//renderer.setSize(window.innerWidth - 350 - 23, 500);
-	renderer.setSize(600, 600);
 	document.getElementById("plot-panel").appendChild(renderer.domElement);
+	fillWindow();
 	scene.add(renderedPlane);
 
-	const w = renderer.domElement.clientWidth;
-	const h = renderer.domElement.clientHeight;
-	const texType = THREE.FloatType;
-	const texFilter = THREE.NearestFilter;
-	const texWrap = THREE.RepeatWrapping;
+	environment.f.value           = 0.055;
+	environment.k.value           = 0.062;
+	environment.da.value          = 1.0;
+	environment.db.value          = 0.5;
+	environment.diagonal.value    = 0.05;
+	environment.direct.value      = 0.2;
+	environment.myself.value      = -1.0;
+	environment.click.value       = defaultClick;
+	environment.clickRadius.value = 5.0;
 
-	current = new THREE.WebGLRenderTarget(w, h, {
-		type: texType, 
-		wrapS: texWrap, 
-		wrapT: texWrap, 
-		magFilter: texFilter,
-		minFilter: texFilter});
-	next = new THREE.WebGLRenderTarget(w, h, {
-		type: texType, 
-		wrapS: texWrap, 
-		wrapT: texWrap, 
-		magFilter: texFilter,
-		minFilter: texFilter});
-
-	environment.f.value     = 0.055;
-	environment.k.value     = 0.062;
-	environment.da.value    = 1.0;
-	environment.db.value    = 0.5;
-	environment.texel.value = new THREE.Vector2(1.0 / w, 1.0 / h);
-
-	/*
-	 * ThreeJS' Matrix3.set() takes arguments as row-major.
-	 * https://threejs.org/docs/index.html#api/en/math/Matrix3
-	 */
-	environment.convolution.value = new THREE.Matrix3();
-	environment.convolution.value.set(0.05, 0.2, 0.05,
-									  0.2, -1.0, 0.2,
-									  0.05, 0.2, 0.05);
-
-	environment.click.value = defaultClick;
-	environment.clickRadius.value = 2.0;
-
-	sliders.speed.slider.min = sliders.speed.targetBounds.min;
-	sliders.speed.slider.max = sliders.speed.targetBounds.max;
-	sliders.radius.slider.min = sliders.radius.targetBounds.min;
-	sliders.radius.slider.max = sliders.radius.targetBounds.max;
+	sliders.speed.slider.min  = sliders.speed.targetBounds.min;
+	sliders.speed.slider.max  = sliders.speed.targetBounds.max;
 
 	for (const [k, v] of Object.entries(sliders)) {
 		v.slider.value = remap(v.target.value, v.targetBounds, {min: v.slider.min, max: v.slider.max});
@@ -146,20 +117,6 @@ for (const [k, v] of Object.entries(sliders)) {
 	});
 }
 
-/*
-document.getElementById("randomize").addEventListener("click", function(){
-	sliders.f.slider.value = sliders.f.slider.min + Math.floor(Math.random() * (sliders.f.slider.max - sliders.f.slider.min + 1));
-	sliders.k.slider.value = sliders.k.slider.min + Math.floor(Math.random() * (sliders.k.slider.max - sliders.k.slider.min + 1));
-	sliders.da.slider.value = sliders.da.slider.min + Math.floor(Math.random() * (sliders.da.slider.max - sliders.da.slider.min + 1));
-	sliders.db.slider.value = sliders.db.slider.min + Math.floor(Math.random() * (sliders.db.slider.max - sliders.db.slider.min + 1));
-
-	for (const [k, v] of Object.entries(sliders)) {
-		v.target.value = remap(v.slider.value, {min: v.slider.min, max: v.slider.max}, v.targetBounds); 
-		updateLabel(v);
-	}
-});
-*/
-
 renderer.domElement.addEventListener("mousedown", function(e){
 	if(e.which !== 1) { return; } //Don't do anything if not left click
 	click(e);
@@ -174,16 +131,19 @@ renderer.domElement.addEventListener("mouseup", function(e){
 	if(e.which !== 1) { return; } //Don't do anything if not left click
 	environment.click.value = defaultClick;
 });
+
+window.addEventListener("resize", function(){
+	fillWindow();
+});
 // --------------------------------------------------------------------------------------
 
 // -------------------------------- Functions Definition --------------------------------
 function step() {
 	requestAnimationFrame(step);
-
 	renderedPlane.material = modelMaterial;
 	let swapEnvironment = false;
 
-	for(let i = 0; i <= speed.value; i++) {
+	for(let i = -1; i < speed.value; i++) {
 		if(swapEnvironment) {
 			environment.current.value = next.texture;
 			renderer.setRenderTarget(current);
@@ -200,6 +160,7 @@ function step() {
 		}
 
 		swapEnvironment = !swapEnvironment;
+		environment.click.value = defaultClick;
 	}
 
 	renderedPlane.material = colorMaterial;
@@ -208,9 +169,10 @@ function step() {
 
 function click(e) {
 	const rendererBB = renderer.domElement.getBoundingClientRect();
-	const x = e.clientX - rendererBB.left;
-	const y = rendererBB.height - e.clientY + rendererBB.top;
-	const inRenderer = (x >= 0 && x < rendererBB.width && y >= 0 && y < rendererBB.height);
+	const x = (e.clientX - rendererBB.left) / 2;
+	const y = (rendererBB.height - e.clientY + rendererBB.top) / 2;
+	const dim = getScaledDimensions();
+	const inRenderer = (x >= 0 && x < dim.w && y >= 0 && y < dim.h);
 
 	environment.click.value = inRenderer ? new THREE.Vector2(x, y) : defaultClick;
 }
@@ -238,5 +200,35 @@ function remap(value, currentBounds, targetBounds) {
 	}
 
 	return targetValue;
+}
+
+function fillWindow() {
+	renderer.setSize(window.innerWidth - 350 - 23, window.innerHeight - 25);
+
+	const scaledDim = getScaledDimensions();
+	const texType = THREE.FloatType;
+	const texWrap = THREE.RepeatWrapping;
+	const texFilter = THREE.LinearFilter;
+
+	current = new THREE.WebGLRenderTarget(scaledDim.w, scaledDim.h, {
+		type: texType, 
+		wrapS: texWrap, 
+		wrapT: texWrap, 
+		magFilter: texFilter,
+		minFilter: texFilter});
+	next = new THREE.WebGLRenderTarget(scaledDim.w, scaledDim.h, {
+		type: texType, 
+		wrapS: texWrap, 
+		wrapT: texWrap, 
+		magFilter: texFilter,
+		minFilter: texFilter});
+
+	environment.texel.value = new THREE.Vector2(1.0 / scaledDim.w, 1.0 / scaledDim.h);
+}
+
+function getScaledDimensions() {
+	return {
+		w: renderer.domElement.clientWidth * dimensionScale, 
+		h: renderer.domElement.clientHeight * dimensionScale};
 }
 // --------------------------------------------------------------------------------------

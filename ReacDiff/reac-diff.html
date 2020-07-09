@@ -32,15 +32,6 @@
 						<span class="name">speed<span id="speed-range-label"></span></span>
 						<input type="range" min="0" max="100" class="slider" id="speed-slider">
 					</div>
-					<div class="container" id="radius-container">
-						<span class="name">radius<span id="radius-range-label"></span></span>
-						<input type="range" min="0" max="100" class="slider" id="radius-slider">
-					</div>
-					<!--
-					<div class="container" id="randomize-container">
-						<button type="button" class="button" id="randomize">Randomize</button>
-					</div>
-					-->
 				</div>
 			</div>
 		</div>
@@ -68,7 +59,9 @@
 		uniform float da;			//A diffusion rate
 		uniform float db;			//B diffusion rate
 		uniform vec2  texel;		//Texture pixel
-		uniform mat3  convolution;	//Factors to compute the Laplacian
+		uniform float diagonal;		//Laplacian weight for diagonal neighbours
+		uniform float direct;		//Laplacian weight for direct neighbours
+		uniform float myself;		//Laplacian weight for myself
 		uniform vec2  click;		//Position of a click, if any
 		uniform float clickRadius;	//Radius of a click
 
@@ -80,32 +73,26 @@
 			 * Knowing the laplacian we can use the model's equations to find the next values for A and B. 
 			 * http://karlsims.com/rd.html
 			 */
-			vec2 uv00 = texture2D(current, currentUV + vec2(-texel.x, -texel.y)).rg;
-			vec2 uv01 = texture2D(current, currentUV + vec2(-texel.x,      0.0)).rg;
-			vec2 uv02 = texture2D(current, currentUV + vec2(-texel.x,  texel.y)).rg;
-			vec2 uv10 = texture2D(current, currentUV + vec2(     0.0, -texel.y)).rg;
-			vec2 uv11 = texture2D(current, currentUV                           ).rg;
-			vec2 uv12 = texture2D(current, currentUV + vec2(     0.0,  texel.y)).rg;
-			vec2 uv20 = texture2D(current, currentUV + vec2( texel.x, -texel.y)).rg;
-			vec2 uv21 = texture2D(current, currentUV + vec2( texel.x,      0.0)).rg;
-			vec2 uv22 = texture2D(current, currentUV + vec2( texel.x,  texel.y)).rg;
+			vec2 _diagonals = texture2D(current, currentUV + vec2(-texel.x, -texel.y)).rg +
+							  texture2D(current, currentUV + vec2( texel.x, -texel.y)).rg +
+							  texture2D(current, currentUV + vec2(-texel.x,  texel.y)).rg +
+							  texture2D(current, currentUV + vec2( texel.x,  texel.y)).rg;
+			vec2 _directs = texture2D(current, currentUV + vec2(-texel.x,      0.0)).rg +
+						    texture2D(current, currentUV + vec2(     0.0, -texel.y)).rg +
+						    texture2D(current, currentUV + vec2( texel.x,      0.0)).rg +
+						    texture2D(current, currentUV + vec2(     0.0,  texel.y)).rg;
+			vec2 _myself = texture2D(current, currentUV).rg;
 
-			/*
-			 * OpenGL matrices are column-major.
-			 * https://www.khronos.org/opengl/wiki/Data_Type_(GLSL)#Matrices
-			 */
-			vec2 laplacian = convolution[0][0] * uv00 + convolution[1][0] * uv10 + convolution[2][0] * uv20 +
-							 convolution[0][1] * uv01 + convolution[1][1] * uv11 + convolution[2][1] * uv21 +
-							 convolution[0][2] * uv02 + convolution[1][2] * uv12 + convolution[2][2] * uv22;
+			vec2 laplacian = diagonal * _diagonals + direct * _directs + myself * _myself;
 
-			vec2 nextUV = vec2(
-				clamp(uv11.r + da * laplacian.r - uv11.r * uv11.g * uv11.g +       f * (1.0 - uv11.r), 0.0, 2.0),
-				clamp(uv11.g + db * laplacian.g + uv11.r * uv11.g * uv11.g - (k + f) *         uv11.g, 0.0, 2.0));
+			vec2 nextUV = _myself + vec2(
+				da * laplacian.r - _myself.r * _myself.g * _myself.g + f * (1.0 - _myself.r),
+				db * laplacian.g + _myself.r * _myself.g * _myself.g - (k + f) *  _myself.g);
 
 			//If there is a click and we are currently within the wanted radius
 			if(click.x >= 0.0 && distance(currentUV / texel, click) < clickRadius) { nextUV.g = 1.0; }
 
-			gl_FragColor = vec4(nextUV.r, nextUV.g, 0.0, 1.0);
+			gl_FragColor = vec4(clamp(nextUV.r, 0.0, 1.0), clamp(nextUV.g, 0.0, 1.0), 0.0, 1.0);
 		}
 	</script>
 
