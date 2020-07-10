@@ -43,6 +43,10 @@ a {
 	margin: 0px 0px 10px 20px;
 }
 
+.name {
+	white-space: pre;
+}
+
 .slider {
 	width: calc(100% - 170px);
 	height: 2px; 
@@ -74,4 +78,12 @@ a {
 
 .slider:hover, .slider:focus {
 	background: #b3b3b3;
+}
+
+#parameters-block .slider {
+	width: 275px;
+}
+
+#options-block .slider {
+	width: 310px;
 }
