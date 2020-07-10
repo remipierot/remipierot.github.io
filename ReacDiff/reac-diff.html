@@ -9,47 +9,54 @@
 <body>
 	<div id="app">
 		<div class="panel" id="settings-panel">
-			<div id="settings" collapsed="expanded">
-				<div class="block" id="formulas-block">
-					<div class="title">Formulas</div>
-					<div class="formula">. A' = A + (DA * Laplacian(A) - A * B^2 + f * (1 - A)) * dt</div>
-					<div class="formula">. B' = B + (DB * Laplacian(B) + A * B^2 - (k + f) * B)) * dt</div>
-				</div>
+			<div class="block" id="formulas-block">
+				<div class="title">Formulas</div>
+				<div class="formula">. A' = A + (DA * Laplacian(A) - A * B^2 + f * (1 - A)) * dt</div>
+				<div class="formula">. B' = B + (DB * Laplacian(B) + A * B^2 - (k + f) * B)) * dt</div>
+			</div>
 
-				<div class="block" id="details-block">
-					<div class="title">Details</div>
-					<div class="detail">. A is a chemical added at a rate f (feed)</div>
-					<div class="detail">. B is a chemical removed at a rate k (kill)</div>
-					<div class="detail">. Two B together can convert an A into a B (reaction)</div>
-					<div class="detail">. DA/DB are the diffusion rates for A and B (diffusion)</div>
-					<div class="detail">. Laplacian gives the average value of a chemical locally</div>
-					<div class="detail">. The more A there is in a cell, the whiter it is</div>
-					<div class="detail">. Conversely, the more B the darker</div>
-					<div class="detail">. More info <a href="http://karlsims.com/rd.html">here</a></div>
-				</div>
+			<div class="block" id="details-block">
+				<div class="title">Details</div>
+				<div class="detail">. A is a chemical added at a rate f (feed)</div>
+				<div class="detail">. B is a chemical removed at a rate k (kill)</div>
+				<div class="detail">. Two B together can convert an A into B (reaction)</div>
+				<div class="detail">. DA/DB are the diffusion rates for A and B (diffusion)</div>
+				<div class="detail">. Laplacian gives the average value of a chemical locally</div>
+				<div class="detail">. The more A there is in a cell, the whiter it is</div>
+				<div class="detail">. Conversely, the more B the darker</div>
+				<div class="detail">. More info on the Gray-Scott model <a href="http://karlsims.com/rd.html">here</a></div>
+				<div class="detail">. Inspired by <a href="http://pmneila.github.io/jsexp/grayscott/">pmneila's implementation</a></div>
+			</div>
 
-				<div class="block" id="parameters-block">
-					<div class="title">Parameters</div>
-					<div class="container" id="f-container">
-						<span class="name">    f<span id="f-range-label"></span></span>
-						<input type="range" min="0" max="1000" class="slider" id="f-slider">
-					</div>
-					<div class="container" id="k-container">
-						<span class="name">    k<span id="k-range-label"></span></span>
-						<input type="range" min="0" max="1000" class="slider" id="k-slider">
-					</div>
-					<div class="container" id="da-container">
-						<span class="name">   DA<span id="da-range-label"></span></span>
-						<input type="range" min="0" max="1000" class="slider" id="da-slider">
-					</div>
-					<div class="container" id="db-container">
-						<span class="name">   DB<span id="db-range-label"></span></span>
-						<input type="range" min="0" max="1000" class="slider" id="db-slider">
-					</div>
-					<div class="container" id="speed-container">
-						<span class="name">Speed<span id="speed-range-label"></span></span>
-						<input type="range" min="0" max="100" class="slider" id="speed-slider">
-					</div>
+			<div class="block" id="parameters-block">
+				<div class="title">Parameters</div>
+				<div class="container" id="f-container">
+					<span class="name">    f <span id="f-range-label"></span></span>
+					<input type="range" min="0" max="1000" class="slider" id="f-slider">
+				</div>
+				<div class="container" id="k-container">
+					<span class="name">    k <span id="k-range-label"></span></span>
+					<input type="range" min="0" max="1000" class="slider" id="k-slider">
+				</div>
+				<div class="container" id="da-container">
+					<span class="name">   DA <span id="da-range-label"></span></span>
+					<input type="range" min="0" max="1000" class="slider" id="da-slider">
+				</div>
+				<div class="container" id="db-container">
+					<span class="name">   DB <span id="db-range-label"></span></span>
+					<input type="range" min="0" max="1000" class="slider" id="db-slider">
+				</div>
+			</div>
+
+			<div class="block" id="options-block">
+				<div class="title">Drawing options</div>
+				<div class="container" id="speed-container">
+					<span class="name">Speed <span id="speed-range-label"></span></span>
+					<input type="range" class="slider" id="speed-slider">
+				</div>
+				<div class="container" id="zoom-container">
+					<span class="name"> Zoom <span id="zoom-range-label"></span></span>
+					<input type="range" min="1" max="5" class="slider" id="zoom-slider">
 				</div>
 			</div>
 		</div>
@@ -65,7 +72,7 @@
 			 * https://threejs.org/docs/#api/en/renderers/webgl/WebGLProgram
 			 */
 			currentUV = uv;
-			gl_Position = vec4( position, 1.0 );
+			gl_Position = vec4(position, 1.0);
 		}
 	</script>
 
@@ -80,35 +87,35 @@
 		uniform float diagonal;		//Laplacian weight for diagonal neighbours
 		uniform float direct;		//Laplacian weight for direct neighbours
 		uniform float myself;		//Laplacian weight for myself
-		uniform vec2  click;		//Position of a click, if any
-		uniform float clickRadius;	//Radius of a click
+		uniform vec3  click;		//Position and radius of a click, if any
 
 		void main()	{
 			/*
 			 * Compute one step of the Gray-Scott model.
 			 * First we get the 8 closest neighbours + ourself.
-			 * Then we compute the laplacian using the neighbours and the convolution matrix data.
+			 * Then we compute the laplacian using the neighbours and their respective convolution factors.
 			 * Knowing the laplacian we can use the model's equations to find the next values for A and B. 
 			 * http://karlsims.com/rd.html
 			 */
-			vec2 _diagonals = texture2D(current, currentUV + vec2(-texel.x, -texel.y)).rg +
-							  texture2D(current, currentUV + vec2( texel.x, -texel.y)).rg +
-							  texture2D(current, currentUV + vec2(-texel.x,  texel.y)).rg +
-							  texture2D(current, currentUV + vec2( texel.x,  texel.y)).rg;
-			vec2 _directs = texture2D(current, currentUV + vec2(-texel.x,      0.0)).rg +
-						    texture2D(current, currentUV + vec2(     0.0, -texel.y)).rg +
-						    texture2D(current, currentUV + vec2( texel.x,      0.0)).rg +
-						    texture2D(current, currentUV + vec2(     0.0,  texel.y)).rg;
-			vec2 _myself = texture2D(current, currentUV).rg;
+			vec2 _diagonals = texture2D(current, currentUV + vec2(-texel.x, -texel.y)).rg +	//Top left
+							  texture2D(current, currentUV + vec2( texel.x, -texel.y)).rg +	//Top right
+							  texture2D(current, currentUV + vec2(-texel.x,  texel.y)).rg +	//Bottom left
+							  texture2D(current, currentUV + vec2( texel.x,  texel.y)).rg;	//Bottom right
+			vec2 _directs   = texture2D(current, currentUV + vec2(-texel.x,      0.0)).rg +	//Left
+						      texture2D(current, currentUV + vec2(     0.0, -texel.y)).rg +	//Top
+						      texture2D(current, currentUV + vec2( texel.x,      0.0)).rg +	//Right
+						      texture2D(current, currentUV + vec2(     0.0,  texel.y)).rg;	//Bottom
+			vec2 _myself    = texture2D(current, currentUV).rg;
 
 			vec2 laplacian = diagonal * _diagonals + direct * _directs + myself * _myself;
-
+			
 			vec2 next = _myself + vec2(
 				da * laplacian.r - _myself.r * _myself.g * _myself.g + f * (1.0 - _myself.r),
-				db * laplacian.g + _myself.r * _myself.g * _myself.g - (k + f) *  _myself.g);
+				db * laplacian.g + _myself.r * _myself.g * _myself.g - (k + f) *  _myself.g
+			);
 
 			//If there is a click and we are currently within the wanted radius
-			if(click.x >= 0.0 && distance(currentUV / texel, click) < clickRadius) { next.g = 1.0; }
+			if(click.x >= 0.0 && distance(currentUV / texel, click.xy) < click.z) { next.g = 1.0; }
 
 			gl_FragColor = vec4(clamp(next.r, 0.0, 1.0), clamp(next.g, 0.0, 1.0), 0.0, 1.0);
 		}

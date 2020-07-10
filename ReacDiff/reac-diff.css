@@ -1,17 +1,18 @@
 body {
+	margin: 0px;
 	font-family: "Lucida Console", Courier, monospace;
 	font-size: 12px;
-	margin: 0px;
+}
+
+a {
+	text-decoration: none;
+	font-weight: bold;
 }
 
 #app {
+	display: flex;
 	margin: 10px;
-	display: flex;
 	border: 1px black solid;
-}
-
-.panel {
-	display: flex;
 }
 
 #settings-panel {
@@ -20,49 +21,47 @@ body {
 	border-width: 0px 1px 0px 0px;
 }
 
-#settings {
-	width: 470px;
-}
-
 #plot-panel {
-	width: calc(100% - 350px);
-	justify-content: center;
-	align-items: center;
+	width: 100%;
+	padding: 3px 2px 0px 2px;
+	text-align: center;
 	background: #000000;
 }
 
 .block {
-	margin: 5px 5px 40px 5px;
 	width: 460px;
+	margin: 5px 5px 40px 5px;
 }
 
 .title {
+	margin-bottom: 5px;
 	font-weight: bold;
 	font-size: 16px;
-	margin-bottom: 5px;
 }
 
-.container,.formula, .detail  {
+.container, .formula, .detail  {
 	margin: 0px 0px 10px 20px;
 }
 
 .slider {
-	-webkit-appearance: none;
+	width: calc(100% - 170px);
 	height: 2px; 
+	margin: 0px;
+	-webkit-appearance: none;
 	background: #e1e1e1;
 	outline: none;
 	opacity: 0.7;
 	-webkit-transition: .2s;
 	transition: opacity .2s;
-	margin: 0px;
+	
 }
 
 .slider::-webkit-slider-thumb {
-	-webkit-appearance: none;
-	appearance: none;
 	width: 20px;
 	height: 20px;
 	border-radius: 50%; 
+	-webkit-appearance: none;
+	appearance: none;
 	background: #1f8fff;
 }
 
@@ -75,17 +74,4 @@ body {
 
 .slider:hover, .slider:focus {
 	background: #b3b3b3;
-}
-
-#parameters-block .slider {
-	width: calc(100% - 170px);
-}
-
-.name {
-	white-space:pre;
-}
-
-a {
-	text-decoration: none;
-	font-weight: bold;
 }
