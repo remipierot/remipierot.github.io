@@ -222,12 +222,12 @@ class Engine {
 	constructor(parentID, widthOffset, heightOffset) {
 		//Rendering
 		this.#renderer = new THREE.WebGLRenderer();
-		this.#scene = new THREE.Scene();
-		this.#camera = new THREE.OrthographicCamera();
+		this.#scene    = new THREE.Scene();
+		this.#camera   = new THREE.OrthographicCamera();
 
 		//Render data
 		this.#defaultClick = new THREE.Vector3(-1.0, -1.0, 5.0);
-		this.#environment = {
+		this.#environment  = {
 			current:  {type:  "t", value: null},				//Texture holding the current state of the Gray-Scott model
 			f:        {type:  "f", value: 0.055},				//Feed rate (A addition rate)
 			k:        {type:  "f", value: 0.062},				//Kill rate (B removal rate)
@@ -279,6 +279,48 @@ class Engine {
 		this.#environment.current.value = this.#rTarget1.texture;
 	}
 
+	//Add a spot of B chemical on the clicked location, if inside the renderer
+	//The inRenderer check is needed because this method is also registered in the window mousemove event listener
+	click(e) {
+		if (e.which !== 1) { return; } //Don't do anything if not left click
+
+		const rendererBB = this.#renderer.domElement.getBoundingClientRect();
+		const x          = (e.clientX - rendererBB.left) / this.#zoom.value;
+		const y          = (rendererBB.height - e.clientY + rendererBB.top) / this.#zoom.value;
+		const dim        = this.getScaledDimensions();
+		const inRenderer = (x >= 0 && x < dim.w && y >= 0 && y < dim.h);
+		const radius     = this.#defaultClick.z / this.#zoom.value;
+
+		this.#environment.click.value = inRenderer 
+			? new THREE.Vector3(x, y, radius) 
+			: new THREE.Vector3(this.#defaultClick.x, this.#defaultClick.y, radius);
+	}
+
+	//Ensure that the renderer takes as much space as possible inside the window without having to scroll
+	fillWindow() {
+		this.#renderer.setSize(window.innerWidth - this.#widthOffset, window.innerHeight - this.#heightOffset);
+
+		const scaledDim = this.getScaledDimensions();
+		const texType   = THREE.FloatType;
+		const texWrap   = THREE.RepeatWrapping;
+
+		//Create the render targets only if they do not exist yet
+		//Otherwise force them to resize (see step() definition for this)		
+		if(this.#rTarget1 === null) {
+			this.#rTarget1 = new THREE.WebGLRenderTarget(scaledDim.w, scaledDim.h, {
+				type: texType, 
+				wrapS: texWrap, 
+				wrapT: texWrap
+			});
+			this.#rTarget2 = this.#rTarget1.clone();
+		}
+		else{
+			this.#resizeRTargets = true;
+		}
+
+		this.#environment.texel.value = new THREE.Vector2(1.0 / scaledDim.w, 1.0 / scaledDim.h);
+	}
+
 	//Render one step (or more, based on speed) of the Gray-Scott model
 	step() {
 		this.#renderedPlane.material = this.#modelMaterial;
@@ -324,48 +366,6 @@ class Engine {
 		this.#renderer.render(this.#scene, this.#camera);
 		this.#renderer.setRenderTarget(null);
 		this.#environment.current.value = renderTarget.texture;
-	}
-
-	//Add a spot of B chemical on the clicked location, if inside the renderer
-	//The inRenderer check is needed because this method is also registered in the window mousemove event listener
-	click(e) {
-		if (e.which !== 1) { return; } //Don't do anything if not left click
-
-		const rendererBB = this.#renderer.domElement.getBoundingClientRect();
-		const x = (e.clientX - rendererBB.left) / this.#zoom.value;
-		const y = (rendererBB.height - e.clientY + rendererBB.top) / this.#zoom.value;
-		const dim = this.getScaledDimensions();
-		const inRenderer = (x >= 0 && x < dim.w && y >= 0 && y < dim.h);
-		const radius = this.#defaultClick.z / this.#zoom.value;
-
-		this.#environment.click.value = inRenderer 
-			? new THREE.Vector3(x, y, radius) 
-			: new THREE.Vector3(this.#defaultClick.x, this.#defaultClick.y, radius);
-	}
-
-	//Ensure that the renderer takes as much space as possible inside the window without having to scroll
-	fillWindow() {
-		this.#renderer.setSize(window.innerWidth - this.#widthOffset, window.innerHeight - this.#heightOffset);
-
-		const scaledDim = this.getScaledDimensions();
-		const texType   = THREE.FloatType;
-		const texWrap   = THREE.RepeatWrapping;
-
-		//Create the render targets only if they do not exist yet
-		//Otherwise force them to resize (see step() definition for this)		
-		if(this.#rTarget1 === null) {
-			this.#rTarget1 = new THREE.WebGLRenderTarget(scaledDim.w, scaledDim.h, {
-				type: texType, 
-				wrapS: texWrap, 
-				wrapT: texWrap
-			});
-			this.#rTarget2 = this.#rTarget1.clone();
-		}
-		else{
-			this.#resizeRTargets = true;
-		}
-
-		this.#environment.texel.value = new THREE.Vector2(1.0 / scaledDim.w, 1.0 / scaledDim.h);
 	}
 
 	//Get the renderer dimensions scaled with the zoom factor
