@@ -1,12 +1,27 @@
-@media screen and (orientation: landscape) {
+/*
+ * Landscape mobile device
+ */
+@media screen and (orientation: landscape) and (hover: none) and (pointer: coarse) {
 	#app {
 		height: 81vh;
 	}
 }
 
-@media screen and (orientation: portrait) {
+/*
+ * Portrait mobile device
+ */
+@media screen and (orientation: portrait) and (hover: none) and (pointer: coarse) {
 	#app {
 		height: 92vh;
+	}
+}
+
+/*
+ * Standard desktop
+ */
+@media screen and (hover: hover) and (pointer: fine) {
+	#app {
+		height: calc(100vh - 25px);
 	}
 }
 
