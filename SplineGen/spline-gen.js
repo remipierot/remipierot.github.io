@@ -236,6 +236,9 @@ window.addEventListener("load", function(){
 	varColors.backgroundColor.modifyTargetValue(`#${p.backgroundColor}`);
 	varCheckboxes.backgroundTransparency.modifyTargetValue(p.backgroundTransparency === 'true');
 
+	varColors.outlineColor.enabled    = varSliders.outlineThickness.targetValue > 0;
+	varColors.backgroundColor.enabled = !varCheckboxes.backgroundTransparency.targetValue;
+
 	engine.updatePlotDimensions();
 	engine.drawCurve();
 });

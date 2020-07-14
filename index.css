@@ -5,24 +5,27 @@ body {
 }
 
 #app {
-	margin: 10px;
 	display: flex;
+	width: calc(100vw - 25px);
+	height: calc(100vh - 25px);
+	margin: 10px;
 	border: 1px black solid;
 }
 
 .panel {
 	display: block;
-	width: 100%;
+	overflow-x: hidden;
 }
 
 .block {
 	margin: 5px 5px 40px 5px;
+	width: max(100vw, 1920px);
 }
 
 .title {
+	margin-bottom: 15px;
 	font-weight: bold;
 	font-size: 16px;
-	margin-bottom: 15px;
 }
 
 a {
@@ -31,9 +34,9 @@ a {
 }
 
 .sub-title {
+	margin: 20px 0px 5px 20px;
 	font-weight: bold;
 	font-size: 14px;
-	margin: 20px 0px 5px 20px;
 }
 
 .description, .img-list {
@@ -42,15 +45,15 @@ a {
 
 .img-list {
 	display: flex;
-	align-items: center;
 	height: 120px;
+	align-items: center;
 }
 
 img {
-	border: 1px solid #bfbfbf;
-	border-radius: 10px;
 	width: 100px;
 	margin-right: 5px;
+	border: 1px solid #bfbfbf;
+	border-radius: 10px;
 
 	-moz-transition: width .2s ease-in-out;
 	-ms-transition: width .2s ease-in-out;
@@ -60,6 +63,6 @@ img {
 }
 
 img:hover {
-	box-shadow: 0 0 2px 2px #37D0FC;
 	width: 120px;
+	box-shadow: 0 0 2px 2px #37D0FC;
 }
