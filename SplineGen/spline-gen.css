@@ -1,3 +1,15 @@
+@media screen and (orientation: landscape) {
+	#app {
+		height: 81vh;
+	}
+}
+
+@media screen and (orientation: portrait) {
+	#app {
+		height: 92vh;
+	}
+}
+
 [disabled="disabled"] {
 	color: #d1d1d1;
 	opacity: .5;
@@ -18,7 +30,6 @@ a {
 #app {
 	display: flex;
 	width: calc(100vw - 25px);
-	height: calc(100vh - 25px);
 	margin: 10px;
 	border: 1px black solid;
 }
