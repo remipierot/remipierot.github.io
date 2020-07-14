@@ -1,194 +1,8 @@
+import   * as THREE   from '../dependencies/three.module.js';
+import   Utils        from '../dependencies/utils.js';
+import { VarSlider }  from '../dependencies/components.js';
+
 // --------------------------------- Classes Declaration --------------------------------
-//Safety checks and other useful methods
-class Utils {
-	//Check if a value can be considered a number (even if it is a string representing a number for example)
-	static canBeNumber(value) {
-		return !isNaN(parseFloat(value));
-	}
-
-	//Check if a value is a number (no string / null / undefined etc allowed)
-	static isNumber(value) {
-		return Utils.canBeNumber(value) && value[0] === undefined;
-	}
-
-	//Check if value can be called
-	static isFunction(value) {
- 		return Object.prototype.toString.call(value) == '[object Function]';
-	}
-
-	//Return the given value as a string with nbDigitsInt digits before the separator and nbDigitsFloat digits after it
-	static valueToString(value, nbDigitsInt, nbDigitsFloat, separator = '.') {
-		if (!Utils.isNumber(value) && !Utils.canBeNumber(value)) 
-			return null;
-
-		value = Number(value);
-		let split = value.toFixed(nbDigitsFloat).split('.');
-		let vString = split[0].padStart(nbDigitsInt, '0');
-
-		if(nbDigitsFloat > 0) { vString += `${separator}${split[1]}`; } 
-
-		return vString;
-	}
-
-	//Return the textContent of the dom element with the given ID
-	static getContent(id) {
-		return document.getElementById(id).textContent;
-	}
-}
-
-//Handle scalar remapping from one interval to another
-class Bounds {
-	#min
-	#max
-	#range
-
-	get min() { return this.#min; }
-	get max() { return this.#max; }
-
-	/*
-	 * Min always gets the lowest value affected
-	 * Max always gets the highest value affected
-	 * If a can not be a number, it gets the 0.0 default value
-	 * If b can not be a number, it gets the 1.0 default value
-	 */
-	constructor(a = 0.0, b = 1.0) {
-		if (!Utils.isNumber(a))
-			a = Utils.canBeNumber(a) ? Number(a) : 0.0;
-		if (!Utils.isNumber(b))
-			b = Utils.canBeNumber(b) ? Number(b) : 1.0;
-
-		this.#min = (a < b) ? a : b;
-		this.#max = (a < b) ? b : a;
-		this.#range = this.#max - this.#min;
-	}
-
-	/*
-	 * If the given value is contained in these bounds (min and max included),
-	 * will return its normalized value (in [0,1])
-	 */
-	normalize(value) {
-		if (!Utils.isNumber(value) && !Utils.canBeNumber(value)) 
-			return null;
-
-		value = Number(value);
-		let normalized = null;
-		if (this.isInBounds(value))
-			normalized = (value - this.#min) / this.#range; 
-
-		return normalized;
-	}
-
-	/*
-	 * If the value is supposedly normalized (contained in [0,1]),
-	 * will return its mapped value in these bounds
-	 */
-	remap(value) {
-		if (!Utils.isNumber(value) && !Utils.canBeNumber(value)) 
-			return null;
-
-		value = Number(value);
-		let remapped = null;
-		if (value >= 0.0 && value <= 1.0)
-			remapped = this.#min + value * this.#range; 
-
-		return remapped;
-	}
-
-	/*
-	 * Check if the value is contained in these bounds
-	 * If minExclusive is true, a value equal to min will be considered outside the bounds
-	 * If maxExclusive is true, a value equal to max will be considered outside the bounds
-	 */
-	isInBounds(value, minExclusive = false, maxExclusive = false) { 
-		if (!Utils.isNumber(value) && !Utils.canBeNumber(value)) 
-			return false;
-
-		value = Number(value);
-		let aboveMin = minExclusive ? value > this.#min : value >= this.#min;
-		let belowMax = maxExclusive ? value < this.#max : value <= this.#max;
-
-		return aboveMin && belowMax;
-	}
-
-	/*
-	 * If the given value is contained in the sourceBounds (min and max included),
-	 * will return its mapped value in targetBounds
-	 */
-	static remap(value, sourceBounds, targetBounds) {
-		let remapped = null;
-		if (sourceBounds.isInBounds(value))
-			remapped = targetBounds.remap(sourceBounds.normalize(value));
-
-		return remapped;
-	}
-}
-
-//Link a DOM element slider with a variable object
-//The target object has to have a 'value' attribute for the link to properly work
-class VarSlider {
-	#domSlider			//Slider DOM element
-	#domLabel			//Slider label DOM element
-	#target				//Target linked to the slider, has to be an object with a 'value' attribute for proper linking
-	#targetBounds		//Bounds of the target value
-	#sliderBounds		//Bounds of the slider DOM element (not necessarily equal to targetBounds)
-	#nbDigitsInt		//Number of digits used to represent the integer part of numbers
-	#nbDigitsFloat		//Number of digits used to represent the float part of numbers
-	#targetMaxString	//String form of targetBounds.max 
-
-	/*
-	 * Link the slider DOM element to its target by registering an event listener on 'input'
-	 *
-	 * If forceEqualBounds is true, the sliderBounds will be equal to the targetBounds
-	 * inputEvent allows the caller to add any callback function to the listener on 'input', in addition to what is already being done
-	 */
-	constructor(sliderID, labelID, target, targetMin, targetMax, nbDigitsInt, nbDigitsFloat, forceEqualBounds = false, inputEvent = null) {
-		this.#domSlider    = document.getElementById(sliderID);
-		this.#domLabel     = document.getElementById(labelID);
-		this.#target       = target;
-		this.#targetBounds = new Bounds(targetMin, targetMax);
-
-		//Ensure that the slider and the target have the exact same bounds
-		if (forceEqualBounds) {
-			this.#domSlider.min = this.#targetBounds.min;
-			this.#domSlider.max = this.#targetBounds.max;
-		}
-
-		this.#sliderBounds    = new Bounds(this.#domSlider.min, this.#domSlider.max);
-		this.#nbDigitsInt     = nbDigitsInt;
-		this.#nbDigitsFloat   = nbDigitsFloat;
-		this.#targetMaxString = Utils.valueToString(this.#targetBounds.max, this.#nbDigitsInt, this.#nbDigitsFloat);
-
-		//Make sure inputEvent is a callable function
-		if (!Utils.isFunction(inputEvent)) { inputEvent = () => {}; }
-
-		let self = this;
-		this.#domSlider.addEventListener("input", function(){
-			self.updateTargetValue();
-			self.updateLabelText();
-			inputEvent.call();
-		});
-
-		this.updateSliderValue();
-		this.updateLabelText();
-	}
-
-	//Set the slider value using the target one
-	updateSliderValue() {
-		this.#domSlider.value = Bounds.remap(this.#target.value, this.#targetBounds, this.#sliderBounds);
-	}
-
-	//Set the target value using the slider one
-	updateTargetValue() {
-		this.#target.value = Bounds.remap(this.#domSlider.value, this.#sliderBounds, this.#targetBounds);
-	}
-
-	//Set the slider label text using the target value
-	updateLabelText() {
-		let vString = Utils.valueToString(this.#target.value, this.#nbDigitsInt, this.#nbDigitsFloat);
-		this.#domLabel.innerHTML = `(${vString} / ${this.#targetMaxString})`;
-	}
-}
-
 class Engine {
 	//Rendering
 	#renderer 	//WebGL renderer
@@ -207,8 +21,7 @@ class Engine {
 	#rTarget2		//Render target holding a state (current or next) of the Gray-Scott model
 	
 	//Sizing data
-	#widthOffset 	//Width to substract to the window size to fill the renderer DOM element
-	#heightOffset 	//height to substract to the window size to fill the renderer DOM element
+	#plotPanel
 	#resizeRTargets	//True if the rTargets should be resized
 
 	get f()     { return this.#environment.f;  }
@@ -219,7 +32,7 @@ class Engine {
 	get zoom()  { return this.#zoom;           }
 
 	//Initialize the engine, but do not start the rendering
-	constructor(parentID, widthOffset, heightOffset) {
+	constructor(plotID) {
 		//Rendering
 		this.#renderer = new THREE.WebGLRenderer();
 		this.#scene    = new THREE.Scene();
@@ -256,8 +69,7 @@ class Engine {
 		this.#rTarget2		= null;
 
 		//Sizing data
-		this.#widthOffset    = widthOffset;
-		this.#heightOffset   = heightOffset;
+		this.#plotPanel      = document.getElementById(plotID);
 		this.#resizeRTargets = false;
 
 		//Listeners on mouse events
@@ -274,8 +86,9 @@ class Engine {
 
 		//Renderer and scene setup
 		this.#scene.add(this.#renderedPlane);
-		document.getElementById(parentID).appendChild(this.#renderer.domElement);
+		this.#plotPanel.appendChild(this.#renderer.domElement);
 		this.fillWindow();
+		this.updateRenderTargets();
 		this.#environment.current.value = this.#rTarget1.texture;
 	}
 
@@ -298,8 +111,11 @@ class Engine {
 
 	//Ensure that the renderer takes as much space as possible inside the window without having to scroll
 	fillWindow() {
-		this.#renderer.setSize(window.innerWidth - this.#widthOffset, window.innerHeight - this.#heightOffset);
+		this.#renderer.setSize(this.#plotPanel.offsetWidth, this.#plotPanel.offsetHeight);
+	}
 
+	//Create or force the render targets to be resized
+	updateRenderTargets() {
 		const scaledDim = this.getScaledDimensions();
 		const texType   = THREE.FloatType;
 		const texWrap   = THREE.RepeatWrapping;
@@ -379,7 +195,7 @@ class Engine {
 // --------------------------------------------------------------------------------------
 
 // ------------------------------ Variables Initialization ------------------------------
-const engine = new Engine("plot-panel", document.getElementById("settings-panel").offsetWidth + 28, 28);
+const engine = new Engine("plot-panel");
 
 //Slider objects linked to engine variables
 const varSliders = {
@@ -388,12 +204,21 @@ const varSliders = {
 	da:    new VarSlider("da-slider",    "da-range-label",    engine.da,    0.1, 1.0, 2, 3),
 	db:    new VarSlider("db-slider",    "db-range-label",    engine.db,    0.1, 1.0, 2, 3),
 	speed: new VarSlider("speed-slider", "speed-range-label", engine.speed, 1.0, 5.0, 2, 0, true),
-	zoom:  new VarSlider("zoom-slider",  "zoom-range-label",  engine.zoom,  2.0, 5.0, 2, 0, true, () => engine.fillWindow())
+	zoom:  new VarSlider("zoom-slider",  "zoom-range-label",  engine.zoom,  2.0, 5.0, 2, 0, true, () => engine.updateRenderTargets())
 };
 // --------------------------------------------------------------------------------------
 
 // ------------------------------- Listeners Registration -------------------------------
 window.addEventListener("load", function(){
+	let p = Utils.getURLParameters();
+
+	varSliders.f.modifyTargetValue(p.f);
+	varSliders.k.modifyTargetValue(p.k);
+	varSliders.da.modifyTargetValue(p.da);
+	varSliders.db.modifyTargetValue(p.db);
+	varSliders.speed.modifyTargetValue(p.speed);
+	varSliders.zoom.modifyTargetValue(p.zoom);
+
 	engine.step();
 });
 
@@ -403,5 +228,6 @@ window.addEventListener("mousemove", function(e){
 
 window.addEventListener("resize", function(){
 	engine.fillWindow();
+	engine.updateRenderTargets();
 });
 // --------------------------------------------------------------------------------------
