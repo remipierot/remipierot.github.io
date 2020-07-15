@@ -52,12 +52,12 @@ class VarComponent {
 
 	//Set the DOM element value using the target one
 	updateElementValue() {
-		this.domElement.value = this.target.value;
+		this.domElement.value = this.targetValue;
 	}
 
 	//Set the target value using the DOM element one
 	updateTargetValue() {
-		this.target.value = this.domElement.value;
+		this.target.value = this.domValue;
 	}
 
 	//Set the label text
@@ -70,10 +70,6 @@ export class VarSlider extends VarComponent {
 	#nbDigitsInt		//Number of digits used to represent the integer part of numbers
 	#nbDigitsFloat		//Number of digits used to represent the float part of numbers
 	#targetMaxString	//String form of targetBounds.max 
-
-	get domElement() { return null; }
-	get domLabel()   { return null; }
-	get target()     { return null; }
 
 	/*
 	 * Link the slider DOM element to its target by registering an event listener on 'input'
@@ -103,12 +99,12 @@ export class VarSlider extends VarComponent {
 
 	//Set the slider value using the target one
 	updateElementValue() {
-		this.domElement.value = Bounds.remapUsingBounds(this.target.value, this.#targetBounds, this.#sliderBounds);
+		this.domElement.value = Bounds.remapUsingBounds(this.targetValue, this.#targetBounds, this.#sliderBounds);
 	}
 
 	//Set the target value using the slider one
 	updateTargetValue() {
-		this.target.value = Bounds.remapUsingBounds(this.domElement.value, this.#sliderBounds, this.#targetBounds);
+		this.target.value = Bounds.remapUsingBounds(this.domValue, this.#sliderBounds, this.#targetBounds);
 	}
 
 	//Change the target value using an external parameter
@@ -119,7 +115,7 @@ export class VarSlider extends VarComponent {
 
 	//Set the slider label text using the target value
 	updateLabelText() {
-		let vString = Utils.valueToString(this.target.value, this.#nbDigitsInt, this.#nbDigitsFloat);
+		let vString = Utils.valueToString(this.targetValue, this.#nbDigitsInt, this.#nbDigitsFloat);
 		this.domLabel.innerHTML = `(${vString} / ${this.#targetMaxString})`;
 	}
 
@@ -154,12 +150,7 @@ export class VarCheckbox extends VarComponent {
 
 	//Set the checkbox checked value using the target one
 	updateElementValue() {
-		this.domElement.checked = this.target.value;
-	}
-
-	//Set the target value using the checkbox checked one
-	updateTargetValue() {
-		this.target.value = this.domElement.checked;
+		this.domElement.checked = this.targetValue;
 	}
 
 	//Change the target value using an external parameter
