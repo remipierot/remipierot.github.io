@@ -1,6 +1,6 @@
-import   * as THREE   from '../dependencies/three.module.js';
-import   Utils        from '../dependencies/utils.js';
-import { VarSlider }  from '../dependencies/components.js';
+import   * as THREE  from '../dependencies/three.module.js';
+import   Utils       from '../dependencies/utils.js';
+import { VarSlider } from '../dependencies/components.js';
 
 // --------------------------------- Classes Declaration --------------------------------
 class Engine {
@@ -19,20 +19,24 @@ class Engine {
 	#zoom 			//Zoom in the renderer to avoid drawing to much elements, the lower the more consuming
 	#rTarget1		//Render target holding a state (current or next) of the Gray-Scott model
 	#rTarget2		//Render target holding a state (current or next) of the Gray-Scott model
+	#empty			//Tells if the environment contains some B (not empty) or not (empty)
 	
 	//Sizing data
 	#plotPanel
+	#hintDiv
 	#resizeRTargets	//True if the rTargets should be resized
 
+	//Data getters
 	get f()     { return this.#environment.f;  }
 	get k()     { return this.#environment.k;  }
 	get da()    { return this.#environment.da; }
 	get db()    { return this.#environment.db; }
 	get speed() { return this.#speed;          }
 	get zoom()  { return this.#zoom;           }
+	get empty() { return this.#empty.value;    }
 
 	//Initialize the engine, but do not start the rendering
-	constructor(plotID) {
+	constructor(plotID, hintID) {
 		//Rendering
 		this.#renderer = new THREE.WebGLRenderer();
 		this.#scene    = new THREE.Scene();
@@ -67,9 +71,11 @@ class Engine {
 		this.#zoom          = {value: 2};
 		this.#rTarget1     	= null;
 		this.#rTarget2		= null;
+		this.#empty         = {value: true};
 
 		//Sizing data
 		this.#plotPanel      = document.getElementById(plotID);
+		this.#hintDiv        = document.getElementById(hintID);
 		this.#resizeRTargets = false;
 
 		//Listeners on mouse events
@@ -77,14 +83,9 @@ class Engine {
 		this.#renderer.domElement.addEventListener("mousedown", function(e){
 			self.click(e);
 		});
-		this.#renderer.domElement.addEventListener("mouseup", function(e){
-			if (e.which !== 1) { return; } //Don't do anything if not left click
-			self.#environment.click.value = new THREE.Vector3(
-				self.#defaultClick.x, self.#defaultClick.y, self.#defaultClick.z / self.zoom.value
-			);
-		});
 
 		//Renderer and scene setup
+		this.#renderer.setClearColor(new THREE.Color(0xffffff));
 		this.#scene.add(this.#renderedPlane);
 		this.#plotPanel.appendChild(this.#renderer.domElement);
 		this.fillWindow();
@@ -103,6 +104,11 @@ class Engine {
 		const dim        = this.getScaledDimensions();
 		const inRenderer = (x >= 0 && x < dim.w && y >= 0 && y < dim.h);
 		const radius     = this.#defaultClick.z / this.#zoom.value;
+
+		if(this.empty === true && inRenderer) { 
+			this.#hintDiv.style.visibility = "hidden";
+			this.#empty.value = false; 
+		}
 
 		this.#environment.click.value = inRenderer 
 			? new THREE.Vector3(x, y, radius) 
@@ -138,7 +144,7 @@ class Engine {
 	}
 
 	//Render one step (or more, based on speed) of the Gray-Scott model
-	step() {
+	step(loopCall = true) {
 		this.#renderedPlane.material = this.#modelMaterial;
 
 		//If the current value of our model is rTarget1,
@@ -172,7 +178,8 @@ class Engine {
 		//Render the colored version
 		this.#renderedPlane.material = this.#colorMaterial;
 		this.#renderer.render(this.#scene, this.#camera);
-		requestAnimationFrame(() => this.step());
+		
+		if (loopCall === true) { requestAnimationFrame(() => this.step()); }
 	}
 
 	//Render the next model state on the given target
@@ -191,20 +198,40 @@ class Engine {
 			h: this.#renderer.domElement.clientHeight / this.#zoom.value
 		};
 	}
+
+	//Empty the renderer area
+	clear() {
+		if (this.empty === false) {
+			this.#renderer.setRenderTarget(this.#rTarget1);
+			this.#renderer.clear();
+			this.#renderer.setRenderTarget(this.#rTarget2);
+			this.#renderer.clear();
+			this.#renderer.setRenderTarget(null);
+			this.#empty.value = true;
+			this.#hintDiv.style.visibility = "visible";
+		}
+	}
+
+	//Clear coordinates of the click sent to the shader
+	clearClick() {
+		this.#environment.click.value = new THREE.Vector3(
+			this.#defaultClick.x, this.#defaultClick.y, this.#defaultClick.z / this.zoom.value
+		);
+	}
 }
 // --------------------------------------------------------------------------------------
 
 // ------------------------------ Variables Initialization ------------------------------
-const engine = new Engine("plot-panel");
+const engine = new Engine("plot-panel", "clickme-hint");
 
 //Slider objects linked to engine variables
 const varSliders = {
-	f:     new VarSlider("f-slider",     "f-range-label",     engine.f,     0.0, 0.1, 2, 3),
-	k:     new VarSlider("k-slider",     "k-range-label",     engine.k,     0.0, 0.1, 2, 3),
-	da:    new VarSlider("da-slider",    "da-range-label",    engine.da,    0.1, 1.0, 2, 3),
-	db:    new VarSlider("db-slider",    "db-range-label",    engine.db,    0.1, 1.0, 2, 3),
-	speed: new VarSlider("speed-slider", "speed-range-label", engine.speed, 1.0, 5.0, 2, 0, true),
-	zoom:  new VarSlider("zoom-slider",  "zoom-range-label",  engine.zoom,  2.0, 5.0, 2, 0, true, () => engine.updateRenderTargets())
+	f:     new VarSlider("f-slider",     "f-range-label",     engine.f,     0.0, 0.1, 1, 3),
+	k:     new VarSlider("k-slider",     "k-range-label",     engine.k,     0.0, 0.1, 1, 3),
+	da:    new VarSlider("da-slider",    "da-range-label",    engine.da,    0.1, 1.0, 1, 3),
+	db:    new VarSlider("db-slider",    "db-range-label",    engine.db,    0.1, 1.0, 1, 3),
+	speed: new VarSlider("speed-slider", "speed-range-label", engine.speed, 1.0, 5.0, 1, 0, true),
+	zoom:  new VarSlider("zoom-slider",  "zoom-range-label",  engine.zoom,  2.0, 5.0, 1, 0, true, () => engine.updateRenderTargets())
 };
 // --------------------------------------------------------------------------------------
 
@@ -226,8 +253,17 @@ window.addEventListener("mousemove", function(e){
 	engine.click(e);
 });
 
+window.addEventListener("mouseup", function(e){
+	if (e.which !== 1) { return; } //Don't do anything if not left click
+	engine.clearClick();
+});
+
 window.addEventListener("resize", function(){
 	engine.fillWindow();
 	engine.updateRenderTargets();
+});
+
+document.getElementById("clear").addEventListener("click", function(){
+    engine.clear();
 });
 // --------------------------------------------------------------------------------------
