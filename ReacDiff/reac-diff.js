@@ -85,7 +85,6 @@ class Engine {
 		});
 
 		//Renderer and scene setup
-		this.#renderer.setClearColor(new THREE.Color(0xffffff));
 		this.#scene.add(this.#renderedPlane);
 		this.#plotPanel.appendChild(this.#renderer.domElement);
 		this.fillWindow();
@@ -144,7 +143,7 @@ class Engine {
 	}
 
 	//Render one step (or more, based on speed) of the Gray-Scott model
-	step(loopCall = true) {
+	step() {
 		this.#renderedPlane.material = this.#modelMaterial;
 
 		//If the current value of our model is rTarget1,
@@ -179,7 +178,7 @@ class Engine {
 		this.#renderedPlane.material = this.#colorMaterial;
 		this.#renderer.render(this.#scene, this.#camera);
 		
-		if (loopCall === true) { requestAnimationFrame(() => this.step()); }
+		requestAnimationFrame(() => this.step());
 	}
 
 	//Render the next model state on the given target
