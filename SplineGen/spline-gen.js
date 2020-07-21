@@ -220,8 +220,8 @@ const varCheckboxes = {
 }
 
 window.addEventListener("load", function(){
+	//Load the URL parameters to properly setup the sliders etc
 	let p = Utils.getURLParameters();
-
 	varSliders.a.modifyTargetValue(p.a);
 	varSliders.b.modifyTargetValue(p.b);
 	varSliders.c.modifyTargetValue(p.c);
@@ -235,7 +235,6 @@ window.addEventListener("load", function(){
 	varColors.outlineColor.modifyTargetValue(`#${p.outlineColor}`);
 	varColors.backgroundColor.modifyTargetValue(`#${p.backgroundColor}`);
 	varCheckboxes.backgroundTransparency.modifyTargetValue(p.backgroundTransparency === 'true');
-
 	varColors.outlineColor.enabled    = varSliders.outlineThickness.targetValue > 0;
 	varColors.backgroundColor.enabled = !varCheckboxes.backgroundTransparency.targetValue;
 
