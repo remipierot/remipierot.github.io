@@ -1,52 +1,7 @@
-//Safety checks and other useful methods
-export default class Utils {
-	//Check if a value can be considered a number (even if it is a string representing a number for example)
-	static canBeNumber(value) {
-		return !isNaN(parseFloat(value));
-	}
+import { FormatUtils } from './format-utils.js';
+import { Vec2        } from './maths.js';
 
-	//Check if a value is a number (no string / null / undefined etc allowed)
-	static isNumber(value) {
-		return Utils.canBeNumber(value) && value[0] === undefined;
-	}
-
-	//Check if value can be called
-	static isFunction(value) {
- 		return Object.prototype.toString.call(value) == '[object Function]';
-	}
-
-	//Check if value is a color
-	static isColor(value) {
-		let tmp = new Option().style;
-		tmp.color = value;
-		return tmp.color !== '';
-	}
-
-	//Check if value can be a boolean (string true/false accepted)
-	static canBeBoolean(value) {
-		let tmp = String(value).toLowerCase();
-		return tmp === 'true' || tmp === 'false';
-	}
-
-	//Check if value is a boolean (no string accepted)
-	static isBoolean(value) {
-		return value === true || value === false;
-	}
-
-	//Return the given value as a string with nbDigitsInt digits before the separator and nbDigitsFloat digits after it
-	static valueToString(value, nbDigitsInt, nbDigitsFloat, separator = '.') {
-		if (!Utils.isNumber(value) && !Utils.canBeNumber(value)) 
-			return null;
-
-		value = Number(value);
-		let split = value.toFixed(nbDigitsFloat).split('.');
-		let vString = split[0].padStart(nbDigitsInt, '0');
-
-		if(nbDigitsFloat > 0) { vString += `${separator}${split[1]}`; } 
-
-		return vString;
-	}
-
+export class DOMUtils {
 	//Return the textContent of the dom element with the given ID
 	static getContent(id) {
 		return document.getElementById(id).textContent;
@@ -63,12 +18,6 @@ export default class Utils {
 		return paramsDict;
 	}
 
-	//Change the current webpage to the target one, with the given parameters added as a query
-	static redirect(targetURL, urlParamsDictionary) {
-		let urlParams = Utils.buildURLParameters(urlParamsDictionary);
-		window.location.href = targetURL + urlParams;
-	}
-
 	//Build the query part of an URL with the given parameters
 	static buildURLParameters(urlParamsDictionary) {
 		let params = '?';
@@ -79,13 +28,19 @@ export default class Utils {
 		return params.slice(0, -1);
 	}
 
+	//Change the current webpage to the target one, with the given parameters added as a query
+	static redirect(targetURL, urlParamsDictionary) {
+		let urlParams = DOMUtils.buildURLParameters(urlParamsDictionary);
+		window.location.href = targetURL + urlParams;
+	}
+
 	//Draw the given curve on the svg area
-	static plotCurveToSVG(points, thickness, color, svgPlot, backgroundColor = "") {
+	static plotCurveToSVG(points, svgPlot, thickness = 1, color = "\#000000", backgroundColor = "", loopToStart = false) {
 		let svgNS = "http://www.w3.org/2000/svg";
 		let w     = Number(svgPlot.width.baseVal.value);
 		let h     = Number(svgPlot.height.baseVal.value);
 
-		if(Utils.isColor(backgroundColor)) {
+		if(FormatUtils.isColor(backgroundColor)) {
 			let svgBckg = document.createElementNS(svgNS, "rect");
 			svgBckg.setAttribute("x", 0);
 			svgBckg.setAttribute("y", 0);
@@ -100,7 +55,8 @@ export default class Utils {
 			let svgPath = `M${points[0].x} ${h - points[0].y} `;
 			for(let i = 1; i < points.length; i++)
 				svgPath += `L${points[i].x} ${h - points[i].y} `;
-			svgPath += 'Z';
+			if (loopToStart === true)
+				svgPath += 'Z';
 
 			//Draw the curve on the svg
 			let path = document.createElementNS(svgNS, "path");
@@ -114,6 +70,32 @@ export default class Utils {
 		}
 	}
 
+	static plotPointsToSvg(points, svgPlot, radius = 1) {
+		let svgNS = "http://www.w3.org/2000/svg";
+		let h     = Number(svgPlot.height.baseVal.value);
+
+		for(let i = 0; i < points.length; i++) {
+			let p = document.createElementNS(svgNS, "ellipse");
+			p.setAttribute("cx", points[i].x);
+			p.setAttribute("cy", h - points[i].y);
+			p.setAttribute("rx", radius);
+			p.setAttribute("ry", radius);
+			p.setAttribute("fill", "\#000000");
+
+			/*
+			let t = document.createElementNS(svgNS, 'text');
+			t.setAttribute('x', points[i].x);
+			t.setAttribute('y', h - points[i].y);
+			t.setAttribute('fill', '#000');
+			t.textContent = i;
+			*/
+
+			svgPlot.appendChild(p);
+			//svgPlot.appendChild(t);
+		}
+	}
+
+	//Draw all the paths found in svgPlot to canvasPlot
 	static SVGPathToCanvas(svgPlot, canvasPlot) {
 		let svgPaths        = [];
 		let backgroundColor = "";
@@ -128,7 +110,7 @@ export default class Utils {
 				svgPaths.push(child);
 		});
 
-		if(Utils.isColor(backgroundColor)) {
+		if(FormatUtils.isColor(backgroundColor)) {
 			canvasCtx.fillStyle = backgroundColor;
 			canvasCtx.fillRect(0, 0, canvasPlot.width, canvasPlot.height);
 		}
@@ -143,5 +125,20 @@ export default class Utils {
 			canvasCtx.lineCap     = path.getAttribute("stroke-linecap");
 			canvasCtx.stroke(new Path2D(path.getAttribute("d")));
 		});
+	}
+
+	//Get the coordinates of the mouseEvent inside the target element.
+	//X and Y in [0, 1] if unitScale is true.
+	static getClick(mouseEvent, DOMtarget, unitScale = false){
+		const targetBB = DOMtarget.getBoundingClientRect();
+		let x = mouseEvent.clientX - targetBB.left;
+		let y = targetBB.height - mouseEvent.clientY + targetBB.top;
+
+		if (unitScale === true) {
+			x /= targetBB.width;
+			y /= targetBB.height;
+		}
+
+		return new Vec2(x, y);
 	}
 }

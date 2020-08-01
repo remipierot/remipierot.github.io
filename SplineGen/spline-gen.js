@@ -1,4 +1,4 @@
-import   Utils         from '../dependencies/utils.js';
+import { DOMUtils    } from '../dependencies/dom-utils.js';
 import { Bounds      } from '../dependencies/maths.js';
 import { VarSlider   } from '../dependencies/components.js';
 import { VarColor    } from '../dependencies/components.js';
@@ -63,7 +63,7 @@ class Engine {
 		let h = Number(this.#svgPlot.height.baseVal.value);
 		let drawBackground = !this.backgroundTransparency.value;
 	
-		//Fetch the curve (each point having normalized coordinates)
+		//Fetch the curve (each point having x and y in [0, 1])
 		let curve = this.getCurve(
 			this.a.value,
 			this.b.value,
@@ -101,22 +101,24 @@ class Engine {
 		if(newPoints.length > 1) {
 			//Draw outline first
 			if(this.outlineThickness.value > 0) {
-				Utils.plotCurveToSVG(
+				DOMUtils.plotCurveToSVG(
 					newPoints, 
+					this.#svgPlot, 
 					fullThickness, 
 					this.outlineColor.value, 
-					this.#svgPlot, 
-					drawBackground ? this.backgroundColor.value : "none"
+					drawBackground ? this.backgroundColor.value : "none",
+					true
 				);
 				drawBackground = false;
 			}
 	
-			Utils.plotCurveToSVG(
+			DOMUtils.plotCurveToSVG(
 				newPoints, 
+				this.#svgPlot, 
 				this.curveThickness.value, 
 				this.curveColor.value, 
-				this.#svgPlot, 
-				drawBackground ? this.backgroundColor.value : "none"
+				drawBackground ? this.backgroundColor.value : "none",
+				true
 			);
 		}
 	}
@@ -174,7 +176,7 @@ class Engine {
 
 	savePNG(button) {
 		let canvasPlot = document.createElement("canvas");
-		Utils.SVGPathToCanvas(this.#svgPlot, canvasPlot);
+		DOMUtils.SVGPathToCanvas(this.#svgPlot, canvasPlot);
 		button.href = canvasPlot.toDataURL("image/png");
 		button.download = `${this.fileName}.png`;
 	}
@@ -221,7 +223,7 @@ const varCheckboxes = {
 
 window.addEventListener("load", function(){
 	//Load the URL parameters to properly setup the sliders etc
-	let p = Utils.getURLParameters();
+	let p = DOMUtils.getURLParameters();
 	varSliders.a.modifyTargetValue(p.a);
 	varSliders.b.modifyTargetValue(p.b);
 	varSliders.c.modifyTargetValue(p.c);

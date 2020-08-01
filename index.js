@@ -1,4 +1,4 @@
-import Utils from './dependencies/utils.js';
+import { DOMUtils } from './dependencies/dom-utils.js';
 
 const splineGenURL = 'SplineGen/spline-gen.html';
 
@@ -40,7 +40,7 @@ const splineGenExamples = {
 window.addEventListener("load", function(){
     for(const [k, v] of Object.entries(splineGenExamples)) {
         document.getElementById(k).addEventListener("click", function(){
-            Utils.redirect(splineGenURL, v);
+            DOMUtils.redirect(splineGenURL, v);
         });
     }
 });

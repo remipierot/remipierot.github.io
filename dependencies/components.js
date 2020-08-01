@@ -1,5 +1,5 @@
-import   Utils    from './utils.js';
-import { Bounds } from './maths.js';
+import { FormatUtils  } from './format-utils.js';
+import { Bounds       } from './maths.js';
 
 //Link a DOM element with a variable object
 //The target object has to have a 'value' attribute for the link to properly work
@@ -33,7 +33,7 @@ class VarComponent {
 		this.target     = target;
 
 		//Make sure inputEvent is a callable function
-		if (!Utils.isFunction(inputEvent)) { inputEvent = () => {}; }
+		if (!FormatUtils.isFunction(inputEvent)) { inputEvent = () => {}; }
 
 		let self = this;
 		this.domElement.addEventListener("input", function(){
@@ -91,7 +91,7 @@ export class VarSlider extends VarComponent {
 		this.#sliderBounds    = new Bounds(this.domElement.min, this.domElement.max);
 		this.#nbDigitsInt     = nbDigitsInt;
 		this.#nbDigitsFloat   = nbDigitsFloat;
-		this.#targetMaxString = Utils.valueToString(this.#targetBounds.max, this.#nbDigitsInt, this.#nbDigitsFloat);
+		this.#targetMaxString = FormatUtils.valueToString(this.#targetBounds.max, this.#nbDigitsInt, this.#nbDigitsFloat);
 
 		this.updateElementValue();
 		this.updateLabelText();
@@ -115,7 +115,7 @@ export class VarSlider extends VarComponent {
 
 	//Set the slider label text using the target value
 	updateLabelText() {
-		let vString = Utils.valueToString(this.targetValue, this.#nbDigitsInt, this.#nbDigitsFloat);
+		let vString = FormatUtils.valueToString(this.targetValue, this.#nbDigitsInt, this.#nbDigitsFloat);
 		this.domLabel.innerHTML = `(${vString} / ${this.#targetMaxString})`;
 	}
 
@@ -134,7 +134,7 @@ export class VarColor extends VarComponent {
 
 	//Change the target value using an external parameter
 	modifyTargetValue(newValue) {
-		if (!Utils.isColor(newValue)) { return; }
+		if (!FormatUtils.isColor(newValue)) { return; }
 		super.modifyTargetValue(newValue);
 	}
 }
@@ -155,7 +155,7 @@ export class VarCheckbox extends VarComponent {
 
 	//Change the target value using an external parameter
 	modifyTargetValue(newValue) {
-		if (!Utils.canBeBoolean(newValue)) { return; }
+		if (!FormatUtils.canBeBoolean(newValue)) { return; }
 		let tmp = String(newValue).toLowerCase();
 		super.modifyTargetValue(tmp === 'true' ? true : false);
 	}

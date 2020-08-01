@@ -1,5 +1,5 @@
 import   * as THREE  from '../dependencies/three.module.js';
-import   Utils       from '../dependencies/utils.js';
+import { DOMUtils  } from '../dependencies/dom-utils.js';
 import { VarSlider } from '../dependencies/components.js';
 
 // --------------------------------- Classes Declaration --------------------------------
@@ -58,13 +58,13 @@ class Engine {
 		};
 		this.#modelMaterial = new THREE.ShaderMaterial({
 			uniforms:       this.#environment,
-			vertexShader:   Utils.getContent("vShader"),
-			fragmentShader: Utils.getContent("modelFShader")
+			vertexShader:   DOMUtils.getContent("vShader"),
+			fragmentShader: DOMUtils.getContent("modelFShader")
 		});
 		this.#colorMaterial = new THREE.ShaderMaterial({
 			uniforms:       this.#environment,
-			vertexShader:   Utils.getContent("vShader"),
-			fragmentShader: Utils.getContent("colorFShader")
+			vertexShader:   DOMUtils.getContent("vShader"),
+			fragmentShader: DOMUtils.getContent("colorFShader")
 		});
 		this.#renderedPlane = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), this.#colorMaterial);
 		this.#speed         = {value: 5};
@@ -236,7 +236,7 @@ const varSliders = {
 
 // ------------------------------- Listeners Registration -------------------------------
 window.addEventListener("load", function(){
-	let p = Utils.getURLParameters();
+	let p = DOMUtils.getURLParameters();
 
 	varSliders.f.modifyTargetValue(p.f);
 	varSliders.k.modifyTargetValue(p.k);
