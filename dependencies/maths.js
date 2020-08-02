@@ -10,6 +10,18 @@ export class Bounds {
 
 	get min() { return this.#min; }
 	get max() { return this.#max; }
+	set extreme(value) {
+		if (!FormatUtils.isNumber(value) && !FormatUtils.canBeNumber(value)) 
+			return;
+
+		value = Number(value);
+		if(value > this.max)
+			this.#max = value;
+		else if(value < this.min)
+			this.#min = value;
+
+		this.#range = this.#max - this.#min;
+	}
 
 	/*
 	 * Min always gets the lowest value affected
@@ -228,7 +240,12 @@ export class Vec2 {
 
 export class Curve {
 	#points
+	#duplicateXPoints
 
+	get duplicateXPoints() {
+		this.scanForDuplicateX();
+		return this.#duplicateXPoints;
+	}
 	get nbPoints() { return this.#points.length; }
 
 	constructor(points = []) {
@@ -288,6 +305,11 @@ export class Curve {
 		return betweenPoints;
 	}
 
+	isProperFunction() {
+		this.scanForDuplicateX();
+		return this.#duplicateXPoints.length === 0;
+	}
+
 	removePoint(id = 0) {
 		if (!FormatUtils.isIdValid(id, this.#points))
 			return;
@@ -298,6 +320,33 @@ export class Curve {
 	removePoints(id = 0, nbPointsToRemove = 0) {
 		for(let i = 0; i < nbPointsToRemove; i++)
 			this.removePoint(id);
+	}
+
+	scanForDuplicateX() {
+		this.#duplicateXPoints = [[]];
+		if(this.nbPoints <= 2)
+			return;
+
+		let alreadyDefinedX = new Bounds(this.getPoint(0).x, this.getPoint(1).x);
+		let segmentId = 0;
+
+		for (let i = 2; i < this.nbPoints; i++) {
+			let current  = this.getPoint(i);
+
+			if (alreadyDefinedX.isInBounds(current.x))
+				this.#duplicateXPoints[segmentId].push(current);
+			else {
+				alreadyDefinedX.extreme = current.x;
+
+				if(this.#duplicateXPoints[segmentId].length > 0) {
+					this.#duplicateXPoints.push([]);
+					segmentId++;
+				}
+			}
+		}
+
+		if(this.#duplicateXPoints[segmentId].length === 0)
+			this.#duplicateXPoints.pop();
 	}
 
 	setPoint(id = 0, newPoint = Vec2.Zero) {

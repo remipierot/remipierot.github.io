@@ -70,7 +70,7 @@ export class DOMUtils {
 		}
 	}
 
-	static plotPointsToSvg(points, svgPlot, radius = 1) {
+	static plotPointsToSvg(points, svgPlot, radius = 1, color = "\#000000") {
 		let svgNS = "http://www.w3.org/2000/svg";
 		let h     = Number(svgPlot.height.baseVal.value);
 
@@ -80,7 +80,7 @@ export class DOMUtils {
 			p.setAttribute("cy", h - points[i].y);
 			p.setAttribute("rx", radius);
 			p.setAttribute("ry", radius);
-			p.setAttribute("fill", "\#000000");
+			p.setAttribute("fill", color);
 
 			/*
 			let t = document.createElementNS(svgNS, 'text');

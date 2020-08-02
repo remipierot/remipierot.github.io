@@ -9,10 +9,12 @@ class Engine {
 	#spline
 	#editCurve
 	#idToDrag
+	#showDuplicateX
 
 	get alpha()           { return this.#spline.alpha;           }
 	get bezierPrecision() { return this.#spline.bezierPrecision; }
 	get editCurve()       { return this.#editCurve;              }
+	get showDuplicateX()  { return this.#showDuplicateX;         }
 
 	constructor(plotID, svgPlotID) {
 		this.#plotPanel = document.getElementById(plotID);
@@ -20,6 +22,7 @@ class Engine {
 		this.#spline    = new CardinalSpline();
 		this.#editCurve = { value: false };
 		this.#idToDrag  = -1;
+		this.#showDuplicateX = { value: false };
 
 		let self = this;
 		this.#plotPanel.addEventListener("mousedown", function(e){
@@ -82,6 +85,11 @@ class Engine {
 		this.#plotPanel.appendChild(svgClone);
 		this.#svgPlot = svgClone;
 
+		if(this.#showDuplicateX.value === true) {
+			let duplicates = this.#spline.duplicateXPoints;
+			duplicates.forEach(duplicate => DOMUtils.plotCurveToSVG(duplicate, this.#svgPlot, 5, "\#FF0000"));
+		}
+
 		DOMUtils.plotPointsToSvg(this.#spline.getBasePoints(), this.#svgPlot, 3);
 		DOMUtils.plotCurveToSVG(this.#spline.getBasePoints(), this.#svgPlot, 1, "\#000000");
 		DOMUtils.plotCurveToSVG(this.#spline.getPoints(), this.#svgPlot, 3, "\#990099");
@@ -112,7 +120,8 @@ const varSliders = {
 };
 
 const varCheckboxes = {
-	movePoint: new VarCheckbox("move-edit-checkbox", "", engine.editCurve)
+	movePoint:  new VarCheckbox("move-edit-checkbox",   "", engine.editCurve),
+	duplicateX: new VarCheckbox("duplicate-x-checkbox", "", engine.showDuplicateX, () => engine.drawSpline())
 }
 
 window.addEventListener("mouseup", function(e){
