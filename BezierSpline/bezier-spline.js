@@ -1,7 +1,7 @@
-import { DOMUtils       } from '../dependencies/dom-utils.js';
-import { CardinalSpline } from '../dependencies/maths.js';
-import { VarSlider      } from '../dependencies/components.js';
-import { VarCheckbox    } from '../dependencies/components.js';
+import { DOMUtils     } from '../dependencies/dom-utils.js';
+import { BezierSpline } from '../dependencies/maths.js';
+import { VarSlider    } from '../dependencies/components.js';
+import { VarCheckbox  } from '../dependencies/components.js';
 
 class Engine {
 	#plotPanel
@@ -11,15 +11,13 @@ class Engine {
 	#idToDrag
 	#showDuplicateX
 
-	get alpha()           { return this.#spline.alpha;           }
-	get bezierPrecision() { return this.#spline.bezierPrecision; }
-	get editCurve()       { return this.#editCurve;              }
-	get showDuplicateX()  { return this.#showDuplicateX;         }
+	get editCurve()       { return this.#editCurve;      }
+	get showDuplicateX()  { return this.#showDuplicateX; }
 
 	constructor(plotID, svgPlotID) {
 		this.#plotPanel = document.getElementById(plotID);
 		this.#svgPlot   = document.getElementById(svgPlotID);
-		this.#spline    = new CardinalSpline();
+		this.#spline    = new BezierSpline();
 		this.#editCurve = { value: false };
 		this.#idToDrag  = -1;
 		this.#showDuplicateX = { value: false };
@@ -34,8 +32,7 @@ class Engine {
 		
 		this.updatePlotDimensions();
 
-		this.alpha.value           = 10;
-		this.bezierPrecision.value = 25;
+		this.#spline.bezierPrecision.value = 20;
 		this.#spline.fillCubicBezierFactors();
 		this.#spline.buildSpline(true);
 	}
@@ -90,14 +87,10 @@ class Engine {
 			duplicates.forEach(duplicate => DOMUtils.plotCurveToSVG(duplicate, this.#svgPlot, 5, "\#FF0000"));
 		}
 
+		DOMUtils.plotPointsToSvg(this.#spline.getControlPoints(), this.#svgPlot, 3, "\#FF0000");
 		DOMUtils.plotPointsToSvg(this.#spline.getBasePoints(), this.#svgPlot, 3);
 		DOMUtils.plotCurveToSVG(this.#spline.getBasePoints(), this.#svgPlot, 1, "\#000000");
 		DOMUtils.plotCurveToSVG(this.#spline.getPoints(), this.#svgPlot, 3, "\#990099");
-	}
-
-	updateAlpha() {
-		this.#spline.buildSpline();
-		this.drawSpline();
 	}
 
 	updateBezierFactors() {
@@ -113,11 +106,6 @@ class Engine {
 }
 
 const engine = new Engine("plot-panel", "svg-plot");
-
-const varSliders = {
-	alpha:     new VarSlider("a-slider", "a-range-label",  engine.alpha,           1, 25, 2, 0, true, () => engine.updateAlpha()),
-	precision: new VarSlider("p-slider", "p-range-label",  engine.bezierPrecision, 2, 50, 2, 0, true, () => engine.updateBezierFactors()),
-};
 
 const varCheckboxes = {
 	movePoint:  new VarCheckbox("move-edit-checkbox",   "", engine.editCurve),

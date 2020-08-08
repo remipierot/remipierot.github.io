@@ -2,8 +2,8 @@
 <html>
 
 <head>
-	<title>CardinalSpline</title>
-	<link href="card-spline.css" rel="stylesheet">
+	<title>BezierSpline</title>
+	<link href="bezier-spline.css" rel="stylesheet">
 </head>
 
 <body oncontextmenu="return false;">
@@ -11,24 +11,14 @@
 		<div class="panel" id="settings-panel">
             <div class="block" id="details-block">
 				<div class="title">Details</div>
-				<div class="detail">. Alpha: How close to the points the curve is.</div>
-				<div class="detail">. Precision: How many points in each segment of the curve.</div>
                 <div class="detail">. Move: Move the points using any mouse button.</div>
                 <div class="detail">. Edit: Add points with left click, remove them with right click.</div>
                 <div class="detail">. Show duplicate X: Show parts with f(x) already defined (in red).</div>
-				<div class="detail">. Sources <a href="https://github.com/remipierot/remipierot.github.io/tree/master/CardinalSpline">here</a></div>
+				<div class="detail">. Sources <a href="https://github.com/remipierot/remipierot.github.io/tree/master/BezierSpline">here</a></div>
 			</div>
 
 			<div class="block" id="parameters-block">
 				<div class="title">Parameters</div>
-				<div class="container" id="a-container">
-					<span class="name">    Alpha <span id="a-range-label"></span></span>
-					<input type="range" class="slider" id="a-slider">
-				</div>
-				<div class="container" id="p-container">
-					<span class="name">Precision <span id="p-range-label"></span></span>
-					<input type="range" class="slider" id="p-slider">
-                </div>
                 <div class="container" id="move-edit-container">
                     <span class="name">Move</span>
                     <label class="switch">
@@ -49,7 +39,7 @@
         </div>
     </div>
 
-    <script type="module" src="card-spline.js"></script>
+    <script type="module" src="bezier-spline.js"></script>
 </body>
 
 </html>

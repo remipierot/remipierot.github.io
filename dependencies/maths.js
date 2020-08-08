@@ -375,51 +375,78 @@ export class Curve {
 	}
 }
 
-export class CardinalSpline extends Curve {
+export class BezierSpline extends Curve {
 	#baseCurve
-	#extendedCurve
+	#controlCurve
 	#cubicBezierFactors
-	#alpha
 	#bezierPrecision
 
-	get alpha()           { return this.#alpha;              }
 	get bezierPrecision() { return this.#bezierPrecision;    }
 	get nbBasePoints()    { return this.#baseCurve.nbPoints; }
 
-	constructor(basePoints = [], alpha = 1.0, bezierPrecision = 2) {
+	constructor(basePoints = [], bezierPrecision = 2) {
 		super();
 
-		this.#baseCurve     = new Curve(basePoints);
-		this.#extendedCurve = new Curve(basePoints);
-		this.#extendedCurve.insertPoint();
-		this.#extendedCurve.addPoint();
-		this.setExtendedExtremities();
-
-		this.#alpha           = { value: alpha           };
+		this.#baseCurve       = new Curve(basePoints);
 		this.#bezierPrecision = { value: bezierPrecision };
 		this.fillCubicBezierFactors();
-
+		this.fillControlCurve();
 		this.buildSpline(true);
 	}
 
 	baseIdToSplineId(baseId = 0) {	
 		if(baseId < 0 || baseId >= this.nbBasePoints)
 			return -1;
-		
-		let splineId = ((baseId - 1) * this.bezierPrecision.value) + 1;
-		splineId = (baseId === 0) ? 0 : splineId;
 
-		return splineId;
+		if(this.nbPoints <= 1)
+			baseId = 0;
+
+		return baseId * this.bezierPrecision.value;
+	}
+
+	baseIdToControlId(baseId = 0) {
+		if(baseId < 0 || baseId >= this.nbBasePoints)
+			return -1;
+
+		return 2 * baseId;
 	}
 
 	buildSpline(forceClear = false) {
 		if (forceClear === true) {
 			this.clear();
-			this.addPoints(((this.nbBasePoints - 1) * this.#bezierPrecision.value) + 1);
+
+			if(this.nbBasePoints > 1)
+				this.addPoints((this.nbBasePoints - 1) * this.bezierPrecision.value);
+			else if(this.nbBasePoints === 1)
+				this.addPoint(this.getBasePoint(0));
 		}
 
-		for (let i = 0; i < this.nbBasePoints; i++)
+		for (let i = 0; i < this.nbBasePoints - 1; i++)
 			this.setSplineSection(i);
+	}
+
+	fillControlCurve() {
+		this.#controlCurve = new Curve();
+
+		if (this.nbBasePoints <= 1)
+			return;
+
+		for (let i = 0; i < this.nbBasePoints; i++) {
+			const previous = this.getBasePoint(i - 1);
+			const current  = this.getBasePoint(i);
+			const next     = this.getBasePoint(i + 1);
+			let toCurrent  = (previous !== null) ? previous.toPoint(current) : null;
+			let toNext     = (next !== null)     ? current.toPoint(next)     : null;
+			toCurrent      = (toNext !== null && toCurrent === null) ? toNext    : toCurrent;
+			toNext         = (toCurrent !== null && toNext === null) ? toCurrent : toNext;
+			let tanDir     = Vec2.add(toCurrent.normalized(), toNext.normalized()).normalized();
+			tanDir.scalarMult(20);
+
+			if(previous !== null)
+				this.#controlCurve.addPoint(Vec2.sub(current, tanDir));
+			if(next !== null)
+				this.#controlCurve.addPoint(Vec2.add(current, tanDir));
+		}
 	}
 
 	fillCubicBezierFactors() {
@@ -450,6 +477,10 @@ export class CardinalSpline extends Curve {
 		return this.#baseCurve.getPoints();
 	}
 
+	getControlPoints() {
+		return this.#controlCurve.getPoints();
+	}
+
 	getClosestBaseId(otherPoint = Vec2.Zero) {
 		return this.#baseCurve.getClosestPointId(otherPoint);
 	}
@@ -457,91 +488,53 @@ export class CardinalSpline extends Curve {
 	insertBasePoint(baseId = 0, newPoint = Vec2.Zero) {
 		if(!this.#baseCurve.isBetweenPoints(newPoint, baseId - 1) && baseId === this.nbBasePoints - 1)
 			baseId++;
-		
+
 		this.#baseCurve.insertPoint(baseId, newPoint);
-		this.#extendedCurve.insertPoint(baseId + 1, newPoint);
-		this.setExtendedExtremities();
+		if(this.nbBasePoints >= 2)
+			this.fillControlCurve();
 
 		if(this.nbPoints === 0)
 			this.addPoint(newPoint);
 		else
-			this.insertSplineSection(baseId);
+			this.buildSpline(true);
 
 		return baseId;
 	}
 
-	insertSplineSection(baseId = 0) {
-		this.insertPoints(this.baseIdToSplineId(baseId), this.#bezierPrecision.value);
-		this.setSplineSection(baseId);
-	}
-
 	removeBasePoint(baseId = 0) {
 		this.#baseCurve.removePoint(baseId);
-		this.#extendedCurve.removePoint(baseId + 1);
-		this.setExtendedExtremities();
+		this.fillControlCurve();
 		this.buildSpline(true);
-	}
-
-	removeSplineSection(baseId = 0) {
-		this.removePoints(this.baseIdToSplineId(baseId), this.#bezierPrecision.value);
-		this.setSplineSection(baseId);
 	}
 
 	setBasePoint(baseId = 0, newPoint = Vec2.Zero) {
 		this.#baseCurve.setPoint(baseId, newPoint);
-		this.#extendedCurve.setPoint(baseId + 1, newPoint);
-		this.setExtendedExtremities();
+		this.fillControlCurve();
+		this.setSplineSection(baseId - 1);
 		this.setSplineSection(baseId);
 	}
 
-	setExtendedEnd() {
-		if(this.nbBasePoints < 2) 
-			return;
-
-		let ed0 = this.#baseCurve.getPoint(this.nbBasePoints - 1);
-		let ed1 = this.#baseCurve.getPoint(this.nbBasePoints - 2);
-		this.#extendedCurve.setPoint(this.nbBasePoints + 1, ed1.toPoint(Vec2.scalarMult(ed0, 2)));
-	}
-
-	setExtendedExtremities() {
-		this.setExtendedStart();
-		this.setExtendedEnd();
-	}
-
-	setExtendedStart() {
-		if(this.nbBasePoints < 2) 
-			return;
-
-		let st0 = this.#baseCurve.getPoint(0);
-		let st1 = this.#baseCurve.getPoint(1);
-		this.#extendedCurve.setPoint(0, st1.toPoint(Vec2.scalarMult(st0, 2)));
-	}
-
 	setSplineSection(baseId = 0) {
-		for (let i = baseId - 1; i <= baseId + 2; i++) {
-			if (i === 0) 
-				this.setPoint(0, this.#baseCurve.getPoint(0));
-			else if (i > 0 && i < this.nbBasePoints){
-				let sectionId = this.baseIdToSplineId(i);
-				let mi1, i0, i1, i2;
-				let start, ctrl1, ctrl2, end;
-				let bezierPoint;
+		if(this.nbBasePoints === 0 || baseId < 0 || baseId >= this.nbBasePoints)
+			return;
 
+		if(this.nbBasePoints === 1)
+			this.setPoint(0, this.getBasePoint(0));
+		else {
+			let sectionId = this.baseIdToSplineId(baseId);
+			let controlId = this.baseIdToControlId(baseId);
+			let start = this.getBasePoint(baseId);
+			let control1 = this.#controlCurve.getPoint(controlId);
+			let control2 = this.#controlCurve.getPoint(controlId + 1);
+			let end = this.getBasePoint(baseId + 1);
+			let bezierPoint = Vec2.Zero;
+
+			if(start !== null && control1 !== null && control2 !== null && end !== null) {
 				for (let p = 0; p < this.bezierPrecision.value; p++) {
-					mi1   = this.#extendedCurve.getPoint(i - 1);
-					i0    = this.#extendedCurve.getPoint(i);
-					i1    = this.#extendedCurve.getPoint(i + 1);
-					i2    = this.#extendedCurve.getPoint(i + 2);
-
-					start = i0;
-					ctrl1 = Vec2.add(i0, Vec2.scalarDiv(mi1.toPoint(i1), this.alpha.value));
-					ctrl2 = Vec2.sub(i1, Vec2.scalarDiv(i0.toPoint(i2),  this.alpha.value));
-					end   = i1;
-
-					bezierPoint =   Vec2.scalarMult(start, this.#cubicBezierFactors[0][p]);
-					bezierPoint.add(Vec2.scalarMult(ctrl1, this.#cubicBezierFactors[1][p]));
-					bezierPoint.add(Vec2.scalarMult(ctrl2, this.#cubicBezierFactors[2][p]));
-					bezierPoint.add(Vec2.scalarMult(end,   this.#cubicBezierFactors[3][p]));
+					bezierPoint =   Vec2.scalarMult(start,    this.#cubicBezierFactors[0][p]);
+					bezierPoint.add(Vec2.scalarMult(control1, this.#cubicBezierFactors[1][p]));
+					bezierPoint.add(Vec2.scalarMult(control2, this.#cubicBezierFactors[2][p]));
+					bezierPoint.add(Vec2.scalarMult(end,      this.#cubicBezierFactors[3][p]));
 
 					this.setPoint(sectionId + p, bezierPoint);
 				}
