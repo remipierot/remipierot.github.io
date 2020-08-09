@@ -7,13 +7,21 @@ export class Bounds {
 	#min
 	#max
 	#range
+	#isDefault
 
-	get min() { return this.#min; }
-	get max() { return this.#max; }
+	get min()       { return this.#min;   }
+	get max()       { return this.#max;   }
+	get range()     { return this.#range; }
+	get isDefault() {
+		return this.min   >= 0.0  && this.max   <= 1.0  &&
+			this.range >  0.99 && this.range <  1.01 &&
+			this.#isDefault; 
+	}
 	set extreme(value) {
 		if (!FormatUtils.isNumber(value) && !FormatUtils.canBeNumber(value)) 
 			return;
 
+		this.#isDefault = false;
 		value = Number(value);
 		if(value > this.max)
 			this.#max = value;
@@ -36,6 +44,24 @@ export class Bounds {
 		this.#min = (a < b) ? a : b;
 		this.#max = (a < b) ? b : a;
 		this.#range = this.#max - this.#min;
+		this.#isDefault = this.min   >= 0.0  && this.max   <= 1.0  &&
+						  this.range >  0.99 && this.range <  1.01;
+	}
+
+	/*
+	 * Check if the value is contained in these bounds
+	 * If minExclusive is true, a value equal to min will be considered outside the bounds
+	 * If maxExclusive is true, a value equal to max will be considered outside the bounds
+	 */
+	isInBounds(value, minExclusive = false, maxExclusive = false) { 
+		if (!FormatUtils.isNumber(value) && !FormatUtils.canBeNumber(value)) 
+			return false;
+
+		value = Number(value);
+		let aboveMin = minExclusive ? value > this.#min : value >= this.#min;
+		let belowMax = maxExclusive ? value < this.#max : value <= this.#max;
+
+		return aboveMin && belowMax;
 	}
 
 	/*
@@ -68,22 +94,6 @@ export class Bounds {
 			remapped = this.#min + value * this.#range; 
 
 		return remapped;
-	}
-
-	/*
-	 * Check if the value is contained in these bounds
-	 * If minExclusive is true, a value equal to min will be considered outside the bounds
-	 * If maxExclusive is true, a value equal to max will be considered outside the bounds
-	 */
-	isInBounds(value, minExclusive = false, maxExclusive = false) { 
-		if (!FormatUtils.isNumber(value) && !FormatUtils.canBeNumber(value)) 
-			return false;
-
-		value = Number(value);
-		let aboveMin = minExclusive ? value > this.#min : value >= this.#min;
-		let belowMax = maxExclusive ? value < this.#max : value <= this.#max;
-
-		return aboveMin && belowMax;
 	}
 
 	/*
@@ -240,11 +250,9 @@ export class Vec2 {
 
 export class Curve {
 	#points
-	#duplicateXPoints
 
 	get duplicateXPoints() {
-		this.scanForDuplicateX();
-		return this.#duplicateXPoints;
+		return Curve.scanForDuplicateX(this);
 	}
 	get nbPoints() { return this.#points.length; }
 
@@ -281,8 +289,11 @@ export class Curve {
 	}
 
 	insertPoint(id = 0, newPoint = Vec2.Zero) {
-		if (id < 0 || id > this.#points.length || !(newPoint instanceof Vec2))
+		if (id < 0 || !(newPoint instanceof Vec2))
 			return;
+		
+		if (id > this.nbPoints)
+			id = this.nbPoints; 
 		
 		this.#points.splice(id, 0, newPoint);
 	}
@@ -306,8 +317,7 @@ export class Curve {
 	}
 
 	isProperFunction() {
-		this.scanForDuplicateX();
-		return this.#duplicateXPoints.length === 0;
+		return this.duplicateXPoints.length === 0;
 	}
 
 	removePoint(id = 0) {
@@ -320,33 +330,6 @@ export class Curve {
 	removePoints(id = 0, nbPointsToRemove = 0) {
 		for(let i = 0; i < nbPointsToRemove; i++)
 			this.removePoint(id);
-	}
-
-	scanForDuplicateX() {
-		this.#duplicateXPoints = [[]];
-		if(this.nbPoints <= 2)
-			return;
-
-		let alreadyDefinedX = new Bounds(this.getPoint(0).x, this.getPoint(1).x);
-		let segmentId = 0;
-
-		for (let i = 2; i < this.nbPoints; i++) {
-			let current  = this.getPoint(i);
-
-			if (alreadyDefinedX.isInBounds(current.x))
-				this.#duplicateXPoints[segmentId].push(current);
-			else {
-				alreadyDefinedX.extreme = current.x;
-
-				if(this.#duplicateXPoints[segmentId].length > 0) {
-					this.#duplicateXPoints.push([]);
-					segmentId++;
-				}
-			}
-		}
-
-		if(this.#duplicateXPoints[segmentId].length === 0)
-			this.#duplicateXPoints.pop();
 	}
 
 	setPoint(id = 0, newPoint = Vec2.Zero) {
@@ -373,6 +356,39 @@ export class Curve {
 
 		return closestPointId;
 	}
+
+	static scanForDuplicateX(curve) {
+		let duplicateXBounds = [new Bounds()];
+		if(curve.nbPoints <= 2)
+			return;
+
+		let alreadyDefinedX = new Bounds(curve.getPoint(0).x, curve.getPoint(1).x);
+		let segmentId = 0;
+
+		for (let i = 2; i < curve.nbPoints; i++) {
+			let current = curve.getPoint(i);
+
+			if (alreadyDefinedX.isInBounds(current.x) && current.x !== alreadyDefinedX.min && current.x !== alreadyDefinedX.max) {
+				if(duplicateXBounds[segmentId].isDefault === true)
+					duplicateXBounds[segmentId] = new Bounds(curve.getPoint(i - 1).x, current.x);
+
+				duplicateXBounds[segmentId].extreme = current.x;
+			}
+			else {
+				alreadyDefinedX.extreme = current.x;
+
+				if(duplicateXBounds[segmentId].isDefault === false) {
+					duplicateXBounds.push(new Bounds());
+					segmentId++;
+				}
+			}
+		}
+
+		if(duplicateXBounds[segmentId].isDefault === true)
+			duplicateXBounds.pop();
+		
+		return duplicateXBounds;
+	}
 }
 
 export class BezierSpline extends Curve {
@@ -388,9 +404,10 @@ export class BezierSpline extends Curve {
 		super();
 
 		this.#baseCurve       = new Curve(basePoints);
+		this.#controlCurve    = new Curve();
 		this.#bezierPrecision = { value: bezierPrecision };
-		this.fillCubicBezierFactors();
 		this.fillControlCurve();
+		this.fillCubicBezierFactors();
 		this.buildSpline(true);
 	}
 
@@ -412,12 +429,15 @@ export class BezierSpline extends Curve {
 	}
 
 	buildSpline(forceClear = false) {
+		if (this.nbBasePoints < 1)
+			return;
+		
 		if (forceClear === true) {
 			this.clear();
 
-			if(this.nbBasePoints > 1)
+			if (this.nbBasePoints > 1)
 				this.addPoints((this.nbBasePoints - 1) * this.bezierPrecision.value);
-			else if(this.nbBasePoints === 1)
+			else
 				this.addPoint(this.getBasePoint(0));
 		}
 
@@ -427,25 +447,17 @@ export class BezierSpline extends Curve {
 
 	fillControlCurve() {
 		this.#controlCurve = new Curve();
-
+		
 		if (this.nbBasePoints <= 1)
 			return;
 
 		for (let i = 0; i < this.nbBasePoints; i++) {
-			const previous = this.getBasePoint(i - 1);
-			const current  = this.getBasePoint(i);
-			const next     = this.getBasePoint(i + 1);
-			let toCurrent  = (previous !== null) ? previous.toPoint(current) : null;
-			let toNext     = (next !== null)     ? current.toPoint(next)     : null;
-			toCurrent      = (toNext !== null && toCurrent === null) ? toNext    : toCurrent;
-			toNext         = (toCurrent !== null && toNext === null) ? toCurrent : toNext;
-			let tanDir     = Vec2.add(toCurrent.normalized(), toNext.normalized()).normalized();
-			tanDir.scalarMult(20);
+			const defaultControls = this.getDefaultControlPoints(i);
 
-			if(previous !== null)
-				this.#controlCurve.addPoint(Vec2.sub(current, tanDir));
-			if(next !== null)
-				this.#controlCurve.addPoint(Vec2.add(current, tanDir));
+			if(defaultControls[0] !== null)
+				this.#controlCurve.addPoint(defaultControls[0]);
+			if(defaultControls[1] !== null)
+				this.#controlCurve.addPoint(defaultControls[1]);
 		}
 	}
 
@@ -477,12 +489,60 @@ export class BezierSpline extends Curve {
 		return this.#baseCurve.getPoints();
 	}
 
+	getDefaultControlOffsets(baseId = 0) {
+		if(baseId < 0 || baseId >= this.nbBasePoints)
+			return [null, null];
+
+		const controlId       = this.baseIdToControlId(baseId);
+		const defaultControls = this.getDefaultControlPoints(baseId);
+		let offset1 = null;
+		let offset2 = null;
+
+		if(defaultControls[0] !== null)
+			offset1 = defaultControls[0].toPoint(this.#controlCurve.getPoint(controlId - 1));
+		if(defaultControls[1] !== null)
+			offset2 = defaultControls[1].toPoint(this.#controlCurve.getPoint(controlId));
+
+		return [offset1, offset2];
+	}
+
+	getDefaultControlPoints(baseId = 0) {
+		if(baseId < 0 || baseId >= this.nbBasePoints)
+			return [null, null];
+
+		const previous  = this.getBasePoint(baseId - 1);
+		const current   = this.getBasePoint(baseId);
+		const next      = this.getBasePoint(baseId + 1);
+		let toCurrent   = (previous !== null) ? previous.toPoint(current) : null;
+		let toNext      = (next !== null)     ? current.toPoint(next)     : null;
+		toCurrent       = (toNext !== null && toCurrent === null) ? toNext    : toCurrent;
+		toNext          = (toCurrent !== null && toNext === null) ? toCurrent : toNext;
+		let tanDir      = Vec2.add(toCurrent.normalized(), toNext.normalized()).normalized();
+		tanDir.scalarMult(20);
+		let control1 = null;
+		let control2 = null;
+
+		if(previous !== null)
+			control1 = Vec2.sub(current, tanDir);
+		if(next !== null)
+			control2 = Vec2.add(current, tanDir);
+
+		return [control1, control2];
+	}
+
 	getControlPoints() {
 		return this.#controlCurve.getPoints();
 	}
 
 	getClosestBaseId(otherPoint = Vec2.Zero) {
 		return this.#baseCurve.getClosestPointId(otherPoint);
+	}
+
+	getDuplicateXPoints(fromBezierCurve = false) {
+		if(fromBezierCurve === false)
+			return this.#baseCurve.duplicateXPoints;
+		else
+			return this.duplicateXPoints;
 	}
 
 	insertBasePoint(baseId = 0, newPoint = Vec2.Zero) {
@@ -502,16 +562,90 @@ export class BezierSpline extends Curve {
 	}
 
 	removeBasePoint(baseId = 0) {
+		let controlIds = [
+			this.baseIdToControlId(baseId - 1),
+			this.baseIdToControlId(baseId)
+		];
+		let controlOffsets = [
+			this.getDefaultControlOffsets(baseId - 1),
+			this.getDefaultControlOffsets(baseId + 1)
+		];
+
 		this.#baseCurve.removePoint(baseId);
-		this.fillControlCurve();
+
+		if(this.nbBasePoints === 1)
+			this.#controlCurve.clear();
+		else  {
+			if(baseId === 0) {
+				this.#controlCurve.removePoint(controlIds[1]);
+				this.#controlCurve.removePoint(controlIds[1]);
+			}
+			else if(baseId === this.nbBasePoints) {
+				this.#controlCurve.removePoint(controlIds[0]);
+				this.#controlCurve.removePoint(controlIds[0]);
+			}
+			else {
+				this.#controlCurve.removePoint(controlIds[0] + 1);
+				this.#controlCurve.removePoint(controlIds[0] + 1);
+			}
+		
+			let defaultControls = [
+				this.getDefaultControlPoints(baseId - 1),
+				this.getDefaultControlPoints(baseId)
+			];
+
+			for (let i = 0; i < controlIds.length; i++) {
+				if(defaultControls[i][0] !== null)
+					this.#controlCurve.setPoint(controlIds[i] - 1, Vec2.add(defaultControls[i][0], controlOffsets[i][0]));
+				if(defaultControls[i][1] !== null)
+					this.#controlCurve.setPoint(controlIds[i], Vec2.add(defaultControls[i][1], controlOffsets[i][1]));
+			}
+		}
+
 		this.buildSpline(true);
 	}
 
 	setBasePoint(baseId = 0, newPoint = Vec2.Zero) {
+		if(baseId < 0 || baseId >= this.nbBasePoints)
+			return;
+
+		let controlIds = null;
+		let controlOffsets = null;
+
+		if(this.nbBasePoints > 1) {
+			controlIds = [
+				this.baseIdToControlId(baseId - 1),
+				this.baseIdToControlId(baseId),
+				this.baseIdToControlId(baseId + 1)
+			];
+			controlOffsets = [
+				this.getDefaultControlOffsets(baseId - 1),
+				this.getDefaultControlOffsets(baseId),
+				this.getDefaultControlOffsets(baseId + 1)
+			];
+		}
+
 		this.#baseCurve.setPoint(baseId, newPoint);
-		this.fillControlCurve();
-		this.setSplineSection(baseId - 1);
-		this.setSplineSection(baseId);
+
+		if(this.nbBasePoints > 1) {
+			let defaultControls = [
+				this.getDefaultControlPoints(baseId - 1),
+				this.getDefaultControlPoints(baseId),
+				this.getDefaultControlPoints(baseId + 1)
+			];
+
+			for (let i = 0; i < controlIds.length; i++) {
+				if(defaultControls[i][0] !== null)
+					this.#controlCurve.setPoint(controlIds[i] - 1, Vec2.add(defaultControls[i][0], controlOffsets[i][0]));
+				if(defaultControls[i][1] !== null)
+					this.#controlCurve.setPoint(controlIds[i], Vec2.add(defaultControls[i][1], controlOffsets[i][1]));
+			}
+			
+			this.setSplineSection(baseId - 2);
+			this.setSplineSection(baseId - 1);
+			this.setSplineSection(baseId);
+			this.setSplineSection(baseId + 1);
+		}
 	}
 
 	setSplineSection(baseId = 0) {

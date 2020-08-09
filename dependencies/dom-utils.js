@@ -81,6 +81,7 @@ export class DOMUtils {
 			p.setAttribute("rx", radius);
 			p.setAttribute("ry", radius);
 			p.setAttribute("fill", color);
+			svgPlot.appendChild(p);
 
 			/*
 			let t = document.createElementNS(svgNS, 'text');
@@ -88,11 +89,41 @@ export class DOMUtils {
 			t.setAttribute('y', h - points[i].y);
 			t.setAttribute('fill', '#000');
 			t.textContent = i;
+			svgPlot.appendChild(t);
 			*/
-
-			svgPlot.appendChild(p);
-			//svgPlot.appendChild(t);
 		}
+	}
+
+	static plotVerticalAreaToSVG(xBounds, svgPlot, borderThickness = 1, lineColor = "\#000000", areaColor = "\#000000") {
+		let svgNS = "http://www.w3.org/2000/svg";
+		let h     = Number(svgPlot.height.baseVal.value);
+
+		let area = document.createElementNS(svgNS, "rect");
+		area.setAttribute("x", xBounds.min);
+		area.setAttribute("y", 0);
+		area.setAttribute("width", xBounds.range);
+		area.setAttribute("height", h);
+		area.setAttribute("fill", areaColor);
+		area.setAttribute("fill-opacity", .2);
+		svgPlot.appendChild(area);
+
+		let minLine = document.createElementNS(svgNS, "line");
+		minLine.setAttribute("x1", xBounds.min);
+		minLine.setAttribute("y1", 0);
+		minLine.setAttribute("x2", xBounds.min);
+		minLine.setAttribute("y2", h);
+		minLine.setAttribute("stroke", lineColor);
+		minLine.setAttribute("stroke-width", borderThickness);
+		svgPlot.appendChild(minLine);
+
+		let maxLine = document.createElementNS(svgNS, "line");
+		maxLine.setAttribute("x1", xBounds.max);
+		maxLine.setAttribute("y1", 0);
+		maxLine.setAttribute("x2", xBounds.max);
+		maxLine.setAttribute("y2", h);
+		maxLine.setAttribute("stroke", lineColor);
+		maxLine.setAttribute("stroke-width", borderThickness);
+		svgPlot.appendChild(maxLine);
 	}
 
 	//Draw all the paths found in svgPlot to canvasPlot
