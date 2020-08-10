@@ -115,6 +115,18 @@ export class Bounds {
 	static remapUsingValues(value, sourceMin, sourceMax, targetMin, targetMax) {
 		return Bounds.remapUsingBounds(value, new Bounds(sourceMin, sourceMax), new Bounds(targetMin, targetMax));
 	}
+
+	static tryFusion(bounds1, bounds2) {
+		let fusion = null;
+		
+		if(bounds1.isInBounds(bounds2.min) || bounds1.isInBounds(bounds2.max)) {
+			fusion = bounds1;
+			fusion.extreme = bounds2.min;
+			fusion.extreme = bounds2.max;
+		}
+		
+		return fusion;
+	}
 }
 
 export class Vec2 {
@@ -358,35 +370,72 @@ export class Curve {
 	}
 
 	static scanForDuplicateX(curve) {
-		let duplicateXBounds = [new Bounds()];
+		let duplicateXBounds = [];
+		let tmp = [new Bounds()];
 		if(curve.nbPoints <= 2)
 			return;
 
+		let first = curve.getPoint(0);
 		let alreadyDefinedX = new Bounds(curve.getPoint(0).x, curve.getPoint(1).x);
 		let segmentId = 0;
 
 		for (let i = 2; i < curve.nbPoints; i++) {
-			let current = curve.getPoint(i);
+			let previous = curve.getPoint(i - 1);
+			let current  = curve.getPoint(i);
+			let currentBounds = new Bounds(previous.x, current.x);
 
-			if (alreadyDefinedX.isInBounds(current.x) && current.x !== alreadyDefinedX.min && current.x !== alreadyDefinedX.max) {
-				if(duplicateXBounds[segmentId].isDefault === true)
-					duplicateXBounds[segmentId] = new Bounds(curve.getPoint(i - 1).x, current.x);
+			//Special case for first point
+			if (currentBounds.isInBounds(first.x)) {
+				if(tmp[segmentId].isDefault === true)
+					tmp[segmentId] = new Bounds(first.x, previous.x);
+				
+				tmp[segmentId].extreme = first.x;
+			}
+			
+			//General case
+			if (alreadyDefinedX.isInBounds(current.x) && 
+				current.x !== alreadyDefinedX.min && 
+				current.x !== alreadyDefinedX.max) {
+				if(tmp[segmentId].isDefault === true)
+					tmp[segmentId] = currentBounds;
 
-				duplicateXBounds[segmentId].extreme = current.x;
+				tmp[segmentId].extreme = current.x;
 			}
 			else {
 				alreadyDefinedX.extreme = current.x;
 
-				if(duplicateXBounds[segmentId].isDefault === false) {
-					duplicateXBounds.push(new Bounds());
+				if(tmp[segmentId].isDefault === false) {
+					tmp.push(new Bounds());
 					segmentId++;
 				}
 			}
 		}
 
-		if(duplicateXBounds[segmentId].isDefault === true)
-			duplicateXBounds.pop();
-		
+		if(tmp[segmentId].isDefault === true)
+			tmp.pop();
+
+		//Merge duplicate areas together if possible
+		let iToSkip = [];
+		for (let i = 0; i < tmp.length; i++) {
+			if(iToSkip.includes(i))
+				continue;
+			
+			let fusion = tmp[i];
+
+			for (let j = 0; j < tmp.length; j++) {
+				if(i == j)
+					continue;
+
+				const jBounds = tmp[j];
+				if(Bounds.tryFusion(fusion, jBounds) !== null) {
+					iToSkip.push(j);
+					fusion = Bounds.tryFusion(fusion, jBounds)
+				}
+			}
+
+			duplicateXBounds.push(fusion);
+		}
+
 		return duplicateXBounds;
 	}
 }
