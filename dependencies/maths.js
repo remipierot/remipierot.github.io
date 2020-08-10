@@ -48,6 +48,16 @@ export class Bounds {
 						  this.range >  0.99 && this.range <  1.01;
 	}
 
+	equals(bounds, epsilon = 0.01) {
+		if(!(bounds instanceof Bounds))
+			return false;
+		
+		let minDiff = Math.abs(this.min - bounds.min);
+		let maxDiff = Math.abs(this.max - bounds.max);
+
+		return (minDiff + maxDiff < epsilon);
+	}
+
 	/*
 	 * Check if the value is contained in these bounds
 	 * If minExclusive is true, a value equal to min will be considered outside the bounds
@@ -119,7 +129,8 @@ export class Bounds {
 	static tryFusion(bounds1, bounds2) {
 		let fusion = null;
 		
-		if(bounds1.isInBounds(bounds2.min) || bounds1.isInBounds(bounds2.max)) {
+		if(bounds1.isInBounds(bounds2.min) || bounds1.isInBounds(bounds2.max) ||
+		   bounds2.isInBounds(bounds1.min) || bounds2.isInBounds(bounds1.max)) {
 			fusion = bounds1;
 			fusion.extreme = bounds2.min;
 			fusion.extreme = bounds2.max;
@@ -433,7 +444,17 @@ export class Curve {
 				}
 			}
 
-			duplicateXBounds.push(fusion);
+			let alreadyInArray = false;
+			for (let j = 0; j < duplicateXBounds.length; j++) {
+				const jBounds = duplicateXBounds[j];
+				if (jBounds.equals(fusion) === true) {
+					alreadyInArray = true;
+					break;
+				}
+			}
+
+			if(alreadyInArray === false)
+				duplicateXBounds.push(fusion);
 		}
 
 		return duplicateXBounds;
